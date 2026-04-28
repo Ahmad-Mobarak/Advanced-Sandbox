@@ -1,0 +1,27 @@
+ARG IMAGE
+FROM $IMAGE
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV USER root
+
+COPY package/depends.sh /tmp/depends.sh
+
+# build depends
+RUN mkdir -p /log && \
+    sh /tmp/depends.sh
+
+COPY xen /build-xen
+COPY package/configure-xen.sh /build-xen
+RUN cd /build-xen && \
+    chmod +x configure-xen.sh && \
+    ./configure-xen.sh && \
+    echo "Building Xen, this may take a few minutes..." && \
+    make -j$(nproc) dist-xen && \
+    make -j$(nproc) dist-tools && \
+    echo "Install Xen..." && \
+    make -j$(nproc) install-xen && \
+    make -j$(nproc) install-tools && \
+    mv /build-xen/dist/install /dist-xen && \
+    mkdir -p /dist-xen/usr/share/doc/xen && \
+    mv /build-xen/LICENSES/* /dist-xen/usr/share/doc/xen && \
+    rm -rf /build-xen

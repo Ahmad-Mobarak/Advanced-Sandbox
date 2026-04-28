@@ -1,0 +1,36 @@
+infrastructure:
+- .github/**/*
+- helper/**/*
+
+backend:
+- src/backend/**/*
+
+kvm:
+- crates/shim-kvm/**/*
+- src/backend/kvm/**/*
+
+amd sev:
+- crates/shim-kvm/**/*
+- src/backend/sev/**/*
+
+intel sgx:
+- crates/shim-sgx/**/*
+- src/backend/sgx/**/*
+
+wasm:
+- crates/exec-wasmtime/**/*
+- crates/exec-wasmtime-bin/**/*
+- tests/crates/enarx_wasm_tests/**/*
+- tests/enarx_wasm_tests.rs
+
+client:
+- src/cli/**/*
+
+testing:
+- tests/**/*
+
+sallyport:
+- crates/sallyport/**/*
+
+config:
+- crates/enarx-config/**/*

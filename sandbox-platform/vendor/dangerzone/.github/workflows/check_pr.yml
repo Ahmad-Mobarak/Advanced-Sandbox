@@ -1,0 +1,30 @@
+name: Check branch conformity
+on:
+  pull_request:
+    types: ["opened", "labeled", "unlabeled", "reopened", "synchronize"]
+
+jobs:
+  prevent-fixup-commits:
+      runs-on: ubuntu-latest
+      env:
+        target: debian-bookworm
+        distro: debian
+        version: bookworm
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v6
+        - name: prevent fixup commits
+          run: |
+            git fetch origin
+            git status
+            git log --pretty=format:%s origin/main..HEAD | grep -ie '^fixup\|^wip' && exit 1 || true
+
+  check-changelog:
+    runs-on: ubuntu-latest
+    name: Ensure CHANGELOG.md is populated for user-visible changes
+    steps:
+      # Pin the GitHub action to a specific commit that we have audited and know
+      # how it works.
+      - uses: tarides/changelog-check-action@4d6c2153c7193950ebc9fe622c39277bc57eb2ba
+        with:
+          changelog: CHANGELOG.md

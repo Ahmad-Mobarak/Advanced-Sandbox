@@ -1,0 +1,72 @@
+name: coverage
+
+on: [ push, pull_request ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  test:
+    name: ${{ matrix.crate.name }} coverage
+    runs-on: ${{ matrix.crate.host }}
+    env:
+      ENARX_BACKEND: ${{ matrix.crate.name }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        crate:
+          # If you change the number of elements here, also adjust /.codecov.yml
+          - name: sev
+            path: .
+            host: [ self-hosted, linux, sev-snp ]
+          - name: sgx
+            path: .
+            host: [ self-hosted, linux, sgx ]
+          - name: kvm
+            path: .
+            host: [ self-hosted, linux, x64 ]
+          - name: nil
+            path: .
+            host: ubuntu-20.04
+            flags: "--test integration --bin enarx -- wasm::"
+
+    steps:
+      - if: matrix.crate.name == 'nil'
+        run: | 
+          sudo apt -o Acquire::Retries=3 update
+          sudo apt -o Acquire::Retries=3 install -y musl-tools lcov
+      - name: Cleanup working directory
+        run: rm -fr * $HOME/.cargo $HOME/.rustup
+      - uses: actions/checkout@v5
+
+      - name: Install rustup
+        run: curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly-2023-04-15 -y
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          target: x86_64-unknown-linux-gnu
+          toolchain: nightly-2023-04-15
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        run: >
+          curl -LsSf 'https://github.com/taiki-e/cargo-llvm-cov/releases/download/v0.5.3/cargo-llvm-cov-x86_64-unknown-linux-musl.tar.gz'
+          | tar xzf - 
+          && mv cargo-llvm-cov $HOME/.cargo/bin
+
+      - name: Run cargo-llvm-cov
+        run: cargo llvm-cov --coverage-target-only --target x86_64-unknown-linux-gnu --workspace --lcov --output-path lcov.info ${{ matrix.crate.flags }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          directory: ./
+          fail_ci_if_error: false
+          files: ./lcov.info
+          name: ${{ matrix.crate.name }}
+          verbose: true

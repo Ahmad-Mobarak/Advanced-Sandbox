@@ -1,0 +1,29 @@
+import platform
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from dangerzone import util
+
+VERSION_FILE_NAME = "version.txt"
+
+
+def test_get_resource_path() -> None:
+    share_dir = Path("share").resolve()
+    resource_path = util.get_resource_path(VERSION_FILE_NAME).parent
+    assert share_dir.samefile(resource_path), (
+        f"{share_dir} is not the same file as {resource_path}"
+    )
+
+
+def test_replace_control_chars(uncommon_text: str, sanitized_text: str) -> None:
+    """Test that the replace_control_chars() function works properly."""
+    assert util.replace_control_chars(uncommon_text) == sanitized_text
+    assert util.replace_control_chars("normal text") == "normal text"
+    assert util.replace_control_chars("") == ""
+    assert util.replace_control_chars("multi-line\ntext") == "multi-line�text"
+    assert (
+        util.replace_control_chars("multi-line\ntext", keep_newlines=True)
+        == "multi-line\ntext"
+    )

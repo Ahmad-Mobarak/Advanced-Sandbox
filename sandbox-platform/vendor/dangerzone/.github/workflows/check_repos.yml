@@ -1,0 +1,78 @@
+# Test official instructions for installing Dangerzone
+# ====================================================
+#
+# The installation instructions have been copied from our INSTALL.md file.
+# NOTE: When you change either place, please make sure to keep the two files in
+# sync.
+# NOTE: Because the commands run as root, the use of sudo is not necessary.
+name: Test official instructions for installing Dangerzone
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run every day at 00:00 UTC.
+  workflow_dispatch:
+
+jobs:
+  install-from-apt-repo:
+    name: "Install Dangerzone on ${{ matrix.distro}} ${{ matrix.version }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - distro: ubuntu
+            version: "25.10"  # questing
+          - distro: ubuntu
+            version: "25.04"  # plucky
+          - distro: ubuntu
+            version: "24.04"  # noble
+          - distro: ubuntu
+            version: "22.04"  # jammy
+          - distro: debian
+            version: "forky-slim"  # forky / 14
+          - distro: debian
+            version: "trixie-slim"  # trixie / 13
+          - distro: debian
+            version: "bookworm-slim"  # bookworm / 12
+          - distro: debian
+            version: "bullseye-slim"  # bullseye / 11
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check installation instructions in a container
+        run: |
+          podman build .github/workflows/test_check_repos/ \
+              --build-arg DISTRO=${{ matrix.distro }} \
+              --build-arg VERSION=${{ matrix.version }}
+
+  install-from-yum-repo:
+    name: "Install Dangerzone on ${{ matrix.distro}} ${{ matrix.version }}"
+    runs-on: ubuntu-latest
+    container: ${{ matrix.distro }}:${{ matrix.version }}
+    strategy:
+      matrix:
+        include:
+          - distro: fedora
+            version: 42
+          - distro: fedora
+            version: 43
+          - distro: fedora
+            version: 44
+    steps:
+      - name: Add packages.freedom.press to our YUM sources
+        run: |
+          dnf install -y 'dnf-command(config-manager)'
+          dnf-3 config-manager --add-repo=https://packages.freedom.press/yum-tools-prod/dangerzone/dangerzone.repo
+
+      - name: Replace 'rawhide' string with Fedora version
+        # The previous command has created a `dangerzone.repo` file. The
+        # config-manager plugin should have substituted the $releasever variable
+        # with the Fedora version number. However, for unreleased Fedora
+        # versions, this gets translated to "rawhide", even though they do have
+        # a number. To fix this, we need to substitute the "rawhide" string
+        # witht the proper Fedora version.
+        run: |
+          source /etc/os-release
+          sed -i "s/rawhide/${VERSION_ID}/g" /etc/yum.repos.d/dangerzone.repo
+
+      - name: Install Dangerzone
+        # FIXME: We add the `-y` flag here, in lieu of a better way to check the
+        # Dangerzone signature.
+        run: dnf install -y dangerzone

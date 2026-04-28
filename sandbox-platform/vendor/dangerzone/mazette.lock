@@ -1,0 +1,309 @@
+{
+  "assets": {
+    "tessdata": {
+      "all": {
+        "repo": "tesseract-ocr/tessdata_fast",
+        "download_url": "https://api.github.com/repos/tesseract-ocr/tessdata_fast/zipball/4.1.0",
+        "version": "4.1.0",
+        "checksum": "cbbdb9b61061452b13cf77f45cccd051648a71bba01cc98b59ac014bb72f44f1",
+        "executable": false,
+        "destination": "share/tessdata",
+        "extract": {
+          "globs": [
+            "*/afr.traineddata",
+            "*/amh.traineddata",
+            "*/ara.traineddata",
+            "*/asm.traineddata",
+            "*/aze.traineddata",
+            "*/aze_cyrl.traineddata",
+            "*/bel.traineddata",
+            "*/ben.traineddata",
+            "*/bod.traineddata",
+            "*/bos.traineddata",
+            "*/bre.traineddata",
+            "*/bul.traineddata",
+            "*/cat.traineddata",
+            "*/ceb.traineddata",
+            "*/ces.traineddata",
+            "*/chi_sim.traineddata",
+            "*/chi_sim_vert.traineddata",
+            "*/chi_tra.traineddata",
+            "*/chi_tra_vert.traineddata",
+            "*/chr.traineddata",
+            "*/cos.traineddata",
+            "*/cym.traineddata",
+            "*/dan.traineddata",
+            "*/deu.traineddata",
+            "*/div.traineddata",
+            "*/dzo.traineddata",
+            "*/ell.traineddata",
+            "*/eng.traineddata",
+            "*/enm.traineddata",
+            "*/epo.traineddata",
+            "*/est.traineddata",
+            "*/eus.traineddata",
+            "*/fao.traineddata",
+            "*/fas.traineddata",
+            "*/fil.traineddata",
+            "*/fin.traineddata",
+            "*/fra.traineddata",
+            "*/frk.traineddata",
+            "*/frm.traineddata",
+            "*/fry.traineddata",
+            "*/gla.traineddata",
+            "*/gle.traineddata",
+            "*/glg.traineddata",
+            "*/grc.traineddata",
+            "*/guj.traineddata",
+            "*/hat.traineddata",
+            "*/heb.traineddata",
+            "*/hin.traineddata",
+            "*/hrv.traineddata",
+            "*/hun.traineddata",
+            "*/hye.traineddata",
+            "*/iku.traineddata",
+            "*/ind.traineddata",
+            "*/isl.traineddata",
+            "*/ita.traineddata",
+            "*/ita_old.traineddata",
+            "*/jav.traineddata",
+            "*/jpn.traineddata",
+            "*/jpn_vert.traineddata",
+            "*/kan.traineddata",
+            "*/kat.traineddata",
+            "*/kat_old.traineddata",
+            "*/kaz.traineddata",
+            "*/khm.traineddata",
+            "*/kir.traineddata",
+            "*/kmr.traineddata",
+            "*/kor.traineddata",
+            "*/kor_vert.traineddata",
+            "*/lao.traineddata",
+            "*/lat.traineddata",
+            "*/lav.traineddata",
+            "*/lit.traineddata",
+            "*/ltz.traineddata",
+            "*/mal.traineddata",
+            "*/mar.traineddata",
+            "*/mkd.traineddata",
+            "*/mlt.traineddata",
+            "*/mon.traineddata",
+            "*/mri.traineddata",
+            "*/msa.traineddata",
+            "*/mya.traineddata",
+            "*/nep.traineddata",
+            "*/nld.traineddata",
+            "*/nor.traineddata",
+            "*/oci.traineddata",
+            "*/ori.traineddata",
+            "*/pan.traineddata",
+            "*/pol.traineddata",
+            "*/por.traineddata",
+            "*/pus.traineddata",
+            "*/que.traineddata",
+            "*/ron.traineddata",
+            "*/rus.traineddata",
+            "*/san.traineddata",
+            "*/sin.traineddata",
+            "*/slk.traineddata",
+            "*/slv.traineddata",
+            "*/snd.traineddata",
+            "*/spa.traineddata",
+            "*/spa_old.traineddata",
+            "*/sqi.traineddata",
+            "*/srp.traineddata",
+            "*/srp_latn.traineddata",
+            "*/sun.traineddata",
+            "*/swa.traineddata",
+            "*/swe.traineddata",
+            "*/syr.traineddata",
+            "*/tam.traineddata",
+            "*/tat.traineddata",
+            "*/tel.traineddata",
+            "*/tgk.traineddata",
+            "*/tha.traineddata",
+            "*/tir.traineddata",
+            "*/ton.traineddata",
+            "*/tur.traineddata",
+            "*/uig.traineddata",
+            "*/ukr.traineddata",
+            "*/urd.traineddata",
+            "*/uzb.traineddata",
+            "*/uzb_cyrl.traineddata",
+            "*/vie.traineddata",
+            "*/yid.traineddata",
+            "*/yor.traineddata"
+          ],
+          "flatten": true,
+          "filetype": "zip"
+        }
+      }
+    },
+    "podman": {
+      "windows/amd64": {
+        "repo": "containers/podman",
+        "download_url": "https://github.com/containers/podman/releases/download/v5.8.1/podman-remote-release-windows_amd64.zip",
+        "version": "5.8.1",
+        "checksum": "1c0255c38982a1494205bde6f6e5cafcfdca25a64b9fd36510bc45e7c32495b7",
+        "executable": true,
+        "destination": "share/vendor/podman",
+        "extract": {
+          "globs": [
+            "**/bin/*"
+          ],
+          "flatten": true,
+          "filetype": "zip"
+        }
+      },
+      "darwin/amd64": {
+        "repo": "containers/podman",
+        "download_url": "https://github.com/containers/podman/releases/download/v5.8.1/podman-remote-release-darwin_amd64.zip",
+        "version": "5.8.1",
+        "checksum": "fc7f70b510d67603ed995b9cd4692d47c1d9ddb71ec633b9ed858b209f88192e",
+        "executable": true,
+        "destination": "share/vendor/podman",
+        "extract": {
+          "globs": [
+            "**/bin/*"
+          ],
+          "flatten": true,
+          "filetype": "zip"
+        }
+      },
+      "darwin/arm64": {
+        "repo": "containers/podman",
+        "download_url": "https://github.com/containers/podman/releases/download/v5.8.1/podman-remote-release-darwin_arm64.zip",
+        "version": "5.8.1",
+        "checksum": "b5c9b1398721856331af7cf2062309280708d9261bd09cf9f4b0a3707d7cb5d6",
+        "executable": true,
+        "destination": "share/vendor/podman",
+        "extract": {
+          "globs": [
+            "**/bin/*"
+          ],
+          "flatten": true,
+          "filetype": "zip"
+        }
+      }
+    },
+    "gvproxy": {
+      "darwin/amd64": {
+        "repo": "containers/gvisor-tap-vsock",
+        "download_url": "https://github.com/containers/gvisor-tap-vsock/releases/download/v0.8.8/gvproxy-darwin",
+        "version": "0.8.8",
+        "checksum": "614d58dd3f8473258fb6ec18f7631000d2e5c9a761ca52748cc714c07d16382f",
+        "executable": true,
+        "destination": "share/vendor/podman/gvproxy",
+        "extract": false
+      },
+      "darwin/arm64": {
+        "repo": "containers/gvisor-tap-vsock",
+        "download_url": "https://github.com/containers/gvisor-tap-vsock/releases/download/v0.8.8/gvproxy-darwin",
+        "version": "0.8.8",
+        "checksum": "614d58dd3f8473258fb6ec18f7631000d2e5c9a761ca52748cc714c07d16382f",
+        "executable": true,
+        "destination": "share/vendor/podman/gvproxy",
+        "extract": false
+      }
+    },
+    "vfkit": {
+      "darwin/amd64": {
+        "repo": "crc-org/vfkit",
+        "download_url": "https://github.com/crc-org/vfkit/releases/download/v0.6.1/vfkit",
+        "version": "0.6.1",
+        "checksum": "751fb934d8234c0fa0e6558d86010eb36f156a92547f791c5573767af38a2936",
+        "executable": true,
+        "destination": "share/vendor/podman/vfkit",
+        "extract": false
+      },
+      "darwin/arm64": {
+        "repo": "crc-org/vfkit",
+        "download_url": "https://github.com/crc-org/vfkit/releases/download/v0.6.1/vfkit",
+        "version": "0.6.1",
+        "checksum": "751fb934d8234c0fa0e6558d86010eb36f156a92547f791c5573767af38a2936",
+        "executable": true,
+        "destination": "share/vendor/podman/vfkit",
+        "extract": false
+      }
+    },
+    "machine-os": {
+      "darwin/amd64": {
+        "repo": "containers/podman-machine-os",
+        "download_url": "https://github.com/containers/podman-machine-os/releases/download/v5.8.1/podman-machine.x86_64.applehv.raw.zst",
+        "version": "5.8.1",
+        "checksum": "0b2d81c35007347e8cde09aaaf8ede80a8ac900a53fe43bbbfe7d96d30944984",
+        "executable": false,
+        "destination": "share/machine.tar",
+        "extract": false
+      },
+      "darwin/arm64": {
+        "repo": "containers/podman-machine-os",
+        "download_url": "https://github.com/containers/podman-machine-os/releases/download/v5.8.1/podman-machine.aarch64.applehv.raw.zst",
+        "version": "5.8.1",
+        "checksum": "54852e3eb87f80c515d6c865cf870566b803c7b2f55c6e8e26577178af3c1bc5",
+        "executable": false,
+        "destination": "share/machine.tar",
+        "extract": false
+      },
+      "windows/amd64": {
+        "repo": "containers/podman-machine-os",
+        "download_url": "https://github.com/containers/podman-machine-os/releases/download/v5.8.1/podman-machine.x86_64.wsl.tar.zst",
+        "version": "5.8.1",
+        "checksum": "78121c715464005a887ec92c1a929b35d8f157ab6e3a030547a2f4a38c013610",
+        "executable": false,
+        "destination": "share/machine.tar",
+        "extract": false
+      }
+    },
+    "cosign": {
+      "darwin/amd64": {
+        "repo": "sigstore/cosign",
+        "download_url": "https://github.com/sigstore/cosign/releases/download/v2.6.2/cosign-darwin-amd64",
+        "version": "2.6.2",
+        "checksum": "ad5db28c48faf66984c48733cad66504cea316f8e833bb13ef13060a6dc45b13",
+        "executable": true,
+        "destination": "share/vendor/cosign",
+        "extract": false
+      },
+      "darwin/arm64": {
+        "repo": "sigstore/cosign",
+        "download_url": "https://github.com/sigstore/cosign/releases/download/v2.6.2/cosign-darwin-arm64",
+        "version": "2.6.2",
+        "checksum": "c01df01bac51714322f17d6416798d8a7b9e903657c6a2f8f09b9aee5ba29f57",
+        "executable": true,
+        "destination": "share/vendor/cosign",
+        "extract": false
+      },
+      "linux/amd64": {
+        "repo": "sigstore/cosign",
+        "download_url": "https://github.com/sigstore/cosign/releases/download/v2.6.2/cosign-linux-amd64",
+        "version": "2.6.2",
+        "checksum": "d437b8f0d30f5dec169337607fcfa0238de1348503e175f1bb5b94330b1ee409",
+        "executable": true,
+        "destination": "share/vendor/cosign",
+        "extract": false
+      },
+      "windows/amd64": {
+        "repo": "sigstore/cosign",
+        "download_url": "https://github.com/sigstore/cosign/releases/download/v2.6.2/cosign-windows-amd64.exe",
+        "version": "2.6.2",
+        "checksum": "dd6c61e510da627bcaed4cd9db844ec11cacd09826d814d89f7f68d40feb07be",
+        "executable": true,
+        "destination": "share/vendor/cosign",
+        "extract": false
+      }
+    },
+    "h2orestart": {
+      "all": {
+        "repo": "ebandal/H2Orestart",
+        "download_url": "https://github.com/ebandal/H2Orestart/releases/download/v0.7.10/H2Orestart.oxt",
+        "version": "0.7.10",
+        "checksum": "06509458e7fe116b604a9e70a503f8444afa43daae2f47118629440012f7f720",
+        "executable": false,
+        "destination": "dangerzone/container_helpers/h2orestart.oxt",
+        "extract": false
+      }
+    }
+  },
+  "config_checksum": "2be816481401072f8af972ad616099491205ed28f0848e7f4d50ec8ac2cdf0e3"
+}

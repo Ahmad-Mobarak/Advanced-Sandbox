@@ -1,0 +1,1310 @@
+import os
+import pathlib
+import platform
+import shutil
+import time
+import typing
+from typing import Any, Generator, List
+from unittest.mock import MagicMock
+
+import pytest
+from pytest import MonkeyPatch, fixture
+from pytest_mock import MockerFixture
+from pytestqt.qtbot import QtBot
+
+# FIXME: See https://github.com/freedomofpress/dangerzone/issues/320 for more details.
+if typing.TYPE_CHECKING:
+    from PySide2 import QtCore, QtGui, QtWidgets
+else:
+    try:
+        from PySide6 import QtCore, QtGui, QtWidgets
+    except ImportError:
+        from PySide2 import QtCore, QtGui, QtWidgets
+
+from dangerzone import container_utils, errors, settings, startup
+from dangerzone.document import Document
+from dangerzone.gui import main_window as main_window_module
+from dangerzone.gui import updater as updater_module
+from dangerzone.gui.logic import DangerzoneGui
+
+# import Pyside related objects from here to avoid duplicating import logic.
+from dangerzone.gui.main_window import (
+    ConversionWidget,
+    MainWindow,
+    QtCore,
+    QtGui,
+)
+from dangerzone.isolation_provider.container import Container
+from dangerzone.isolation_provider.dummy import Dummy
+from dangerzone.updater import (
+    LAST_KNOWN_LOG_INDEX,
+    EmptyReport,
+    InstallationStrategy,
+    ReleaseReport,
+    releases,
+)
+
+from .test_updater import assert_report_equal, default_updater_settings
+
+
+@fixture
+def dummy(mocker: MockerFixture) -> None:
+    dummy = mocker.MagicMock(spec=Container)
+    dummy.requires_install.return_value = False
+    return dummy
+
+
+@fixture
+def conversion_widget(qtbot: QtBot, mocker: MockerFixture) -> ConversionWidget:
+    # Setup
+    mock_app = mocker.MagicMock()
+    dummy = mocker.MagicMock()
+    dz = DangerzoneGui(mock_app, dummy)
+    w = ConversionWidget(dz)
+    qtbot.addWidget(w)
+    return w
+
+
+def drag_files_event(mocker: MockerFixture, files: List[str]) -> QtGui.QDropEvent:
+    ev = mocker.MagicMock(spec=QtGui.QDropEvent)
+    ev.accept.return_value = True
+
+    urls = [QtCore.QUrl.fromLocalFile(x) for x in files]
+    ev.mimeData.return_value.has_urls.return_value = True
+    ev.mimeData.return_value.urls.return_value = urls
+    return ev
+
+
+@fixture
+def drag_valid_files_event(
+    mocker: MockerFixture, sample_doc: str, sample_pdf: str
+) -> QtGui.QDropEvent:
+    return drag_files_event(mocker, [sample_doc, sample_pdf])
+
+
+@fixture
+def drag_1_invalid_file_event(
+    mocker: MockerFixture, sample_doc: str, tmp_path: pathlib.Path
+) -> QtGui.QDropEvent:
+    unsupported_file_path = tmp_path / "file.unsupported"
+    shutil.copy(sample_doc, unsupported_file_path)
+    return drag_files_event(mocker, [str(unsupported_file_path)])
+
+
+@fixture
+def drag_1_invalid_and_2_valid_files_event(
+    mocker: MockerFixture, tmp_path: pathlib.Path, sample_doc: str, sample_pdf: str
+) -> QtGui.QDropEvent:
+    unsupported_file_path = tmp_path / "file.unsupported"
+    shutil.copy(sample_doc, unsupported_file_path)
+    return drag_files_event(
+        mocker, [sample_doc, sample_pdf, str(unsupported_file_path)]
+    )
+
+
+@fixture
+def drag_text_event(mocker: MockerFixture) -> QtGui.QDropEvent:
+    ev = mocker.MagicMock()
+    ev.accept.return_value = True
+    ev.mimeData.return_value.has_urls.return_value = False
+    return ev
+
+
+def create_main_window(
+    qtbot: QtBot, mocker: MockerFixture, tmp_path: pathlib.Path
+) -> MainWindow:
+    mocker.patch("dangerzone.settings.get_config_dir", return_value=tmp_path)
+    mock_app = mocker.MagicMock()
+    dummy = mocker.MagicMock(spec=Dummy)
+    dz = DangerzoneGui(mock_app, dummy)
+
+    window = MainWindow(dz)
+    qtbot.addWidget(window)
+    return window
+
+
+@fixture
+def window(
+    qtbot: QtBot, mocker: MockerFixture, tmp_path: pathlib.Path
+) -> Generator[MainWindow, Any, Any]:
+    window = create_main_window(qtbot, mocker, tmp_path)
+    yield window
+
+    # Prevent shutdown thread creation during cleanup. When pytest-qt closes the
+    # widget, it triggers closeEvent which calls begin_shutdown. By setting
+    # requires_install to False, begin_shutdown exits immediately without
+    # creating the shutdown_thread, avoiding the "QThread: Destroyed while
+    # thread is still running" error.
+    window.dangerzone.isolation_provider.requires_install.return_value = False  # type: ignore [attr-defined]
+
+    # Wait for any running threads to complete
+    if hasattr(window, "shutdown_thread"):
+        window.shutdown_thread.wait()
+    if hasattr(window, "startup_thread"):
+        window.startup_thread.wait()
+
+
+def test_default_menu(
+    qtbot: QtBot, mocker: MockerFixture, tmp_path: pathlib.Path
+) -> None:
+    """Check that the default menu entries are in order."""
+    # Set the setting BEFORE creating the window so the menu action is initialized correctly
+    mocker.patch("dangerzone.settings.get_config_dir", return_value=tmp_path)
+    settings.Settings().set("updater_check_all", True)
+    window = create_main_window(qtbot, mocker, tmp_path)
+
+    menu_actions = window.hamburger_button.menu().actions()
+    assert len(menu_actions) == 4
+
+    toggle_updates_action = menu_actions[0]
+    assert toggle_updates_action.text() == "Check for updates"
+    assert toggle_updates_action.isChecked()
+
+    view_logs_action = menu_actions[1]
+    assert view_logs_action.text() == "View logs"
+
+    separator = menu_actions[2]
+    assert separator.isSeparator()
+
+    exit_action = menu_actions[3]
+    assert exit_action.text() == "Exit"
+
+    # Let's pretend we planned to have a update already
+    window.dangerzone.settings.set("updater_remote_log_index", 1000, autosave=True)
+    toggle_updates_action.trigger()
+    assert not toggle_updates_action.isChecked()
+    assert window.dangerzone.settings.get("updater_check_all") is False
+    # We keep the remote log index in case updates are activated back
+    # It doesn't mean they will be applied.
+    assert window.dangerzone.settings.get("updater_remote_log_index") == 1000
+
+    # Cleanup: prevent shutdown thread creation during cleanup
+    # The window fixture can't be used here ecause the settings need to be
+    # initialized before the window is created.
+    window.dangerzone.isolation_provider.requires_install.return_value = False  # type: ignore [attr-defined]
+    if hasattr(window, "shutdown_thread"):
+        window.shutdown_thread.wait()
+    if hasattr(window, "startup_thread"):
+        window.startup_thread.wait()
+
+
+def test_no_new_release(
+    qtbot: QtBot,
+    monkeypatch: MonkeyPatch,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    """Test that when no new release has been detected, the user is not alerted."""
+    for task in window.startup_thread.tasks:
+        should_skip = not isinstance(task, startup.UpdateCheckTask)
+        mocker.patch.object(task, "should_skip", return_value=should_skip)
+
+    # Check that when no update is detected, e.g., due to update cooldown, an empty
+    # report is received that does not affect the menu entries.
+    curtime = int(time.time())
+    window.dangerzone.settings.set("updater_check_all", True)
+    window.dangerzone.settings.set("updater_errors", 9)
+    window.dangerzone.settings.set("updater_last_check", curtime)
+    window.dangerzone.settings.set("updater_remote_log_index", 0)
+
+    expected_settings = default_updater_settings()
+    expected_settings["updater_check_all"] = True
+    expected_settings["updater_errors"] = 0  # errors must be cleared
+    expected_settings["updater_last_check"] = curtime
+    expected_settings["updater_remote_log_index"] = 0
+
+    menu_actions_before = window.hamburger_button.menu().actions()
+    check_for_updates_spy = mocker.spy(releases, "check_for_updates")
+    window.startup_thread.start()
+    window.startup_thread.wait()
+
+    def assertions() -> None:
+        # Check that the callback function gets an empty report.
+        assert_report_equal(check_for_updates_spy.spy_return, EmptyReport())
+
+        # Check that the menu entries remain exactly the same.
+        menu_actions_after = window.hamburger_button.menu().actions()
+        assert menu_actions_before == menu_actions_after
+
+        # Check that any previous update errors are cleared.
+        assert window.dangerzone.settings.get_updater_settings() == expected_settings
+
+    qtbot.waitUntil(assertions)
+
+
+def test_new_release_is_detected(
+    qtbot: QtBot,
+    monkeypatch: MonkeyPatch,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    """Test that a newly detected version leads to a notification to the user."""
+    for task in window.startup_thread.tasks:
+        should_skip = not isinstance(task, startup.UpdateCheckTask)
+        mocker.patch.object(task, "should_skip", return_value=should_skip)
+
+    window.dangerzone.settings.set("updater_check_all", True)
+    window.dangerzone.settings.set("updater_last_check", 0)
+    window.dangerzone.settings.set("updater_errors", 9)
+    window.dangerzone.settings.set("updater_remote_log_index", 0)
+
+    # Make requests.get().json() return the following dictionary.
+    mock_upstream_info = {"tag_name": "99.9.9", "body": "changelog"}
+    mocker.patch("dangerzone.updater.releases.requests.get")
+    requests_mock = releases.requests.get
+    requests_mock().status_code = 200  # type: ignore [call-arg]
+    requests_mock().json.return_value = mock_upstream_info  # type: ignore [attr-defined, call-arg]
+
+    load_svg_spy = mocker.spy(main_window_module, "load_svg_image")
+    handle_app_update_available_spy = mocker.spy(window, "handle_app_update_available")
+
+    # Let's pretend we have a new container image out by bumping the remote logindex
+    mocker.patch(
+        "dangerzone.updater.releases.get_remote_digest_and_logindex",
+        return_value=[None, 1000000000000000000, None],
+    )
+    menu_actions_before = window.hamburger_button.menu().actions()
+    check_for_updates_spy = mocker.spy(releases, "check_for_updates")
+
+    window.startup_thread.start()
+    window.startup_thread.wait()
+
+    qtbot.waitUntil(handle_app_update_available_spy.assert_called_once)
+
+    menu_actions_after = window.hamburger_button.menu().actions()
+
+    # Check that the callback function gets an update report.
+    assert_report_equal(
+        check_for_updates_spy.spy_return,
+        ReleaseReport("99.9.9", "<p>changelog</p>", container_image_bump=True),
+    )
+
+    # Check that the settings have been updated properly.
+    expected_settings = default_updater_settings()
+    expected_settings["updater_check_all"] = True
+    expected_settings["updater_last_check"] = window.dangerzone.settings.get(
+        "updater_last_check"
+    )
+    expected_settings["updater_latest_version"] = "99.9.9"
+    expected_settings["updater_latest_changelog"] = "<p>changelog</p>"
+    expected_settings["updater_errors"] = 0
+    expected_settings["updater_remote_log_index"] = 1000000000000000000
+    assert window.dangerzone.settings.get_updater_settings() == expected_settings
+
+    # Check that the hamburger icon has changed with the expected SVG image.
+    assert load_svg_spy.call_count == 2
+    assert load_svg_spy.call_args_list[0].args[0] == "hamburger_menu_update_success.svg"
+    assert (
+        load_svg_spy.call_args_list[1].args[0]
+        == "hamburger_menu_update_dot_available.svg"
+    )
+
+    # Check that new menu entries have been added.
+    menu_actions_after = window.hamburger_button.menu().actions()
+    assert len(menu_actions_after) == 6
+    assert menu_actions_after[2:] == menu_actions_before
+
+    success_action = menu_actions_after[0]
+    assert success_action.text() == "New version available"
+
+    separator = menu_actions_after[1]
+    assert separator.isSeparator()
+
+    # Check that clicking in the new menu entry, opens a dialog.
+    update_dialog_spy = mocker.spy(main_window_module, "UpdateDialog")
+
+    def check_dialog() -> None:
+        dialog = QtWidgets.QApplication.activeWindow()
+
+        update_dialog_spy.assert_called_once()
+        kwargs = update_dialog_spy.call_args.kwargs
+        assert "99.9.9" in kwargs["title"]
+        assert "dangerzone.rocks" in kwargs["intro_msg"]
+        assert not kwargs["middle_widget"].toggle_button.isChecked()
+        collapsible_box = kwargs["middle_widget"]
+        text_browser = (
+            collapsible_box.layout().itemAt(1).widget().layout().itemAt(0).widget()
+        )
+        assert collapsible_box.toggle_button.text() == "What's New?"
+        assert text_browser.toPlainText() == "changelog"
+
+        height_initial = dialog.sizeHint().height()
+        width_initial = dialog.sizeHint().width()
+
+        # Extend the "What's New" section and ensure that the dialog's height
+        # increases.
+        with qtbot.waitSignal(collapsible_box.toggle_animation.finished):
+            collapsible_box.toggle_button.click()
+
+        assert dialog.sizeHint().height() > height_initial
+        assert dialog.sizeHint().width() == width_initial
+
+        # Collapse the "What's New" section, and ensure that the dialog's height gets
+        # back to the original value.
+        with qtbot.waitSignal(collapsible_box.toggle_animation.finished):
+            collapsible_box.toggle_button.click()
+
+        assert dialog.sizeHint().height() == height_initial
+        assert dialog.sizeHint().width() == width_initial
+
+        dialog.close()
+
+    QtCore.QTimer.singleShot(500, check_dialog)
+    success_action.trigger()
+
+    # FIXME: We should check the content of the dialog here.
+
+
+def test_update_error(
+    qtbot: QtBot,
+    monkeypatch: MonkeyPatch,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    """Test that an error during an update check leads to a notification to the user."""
+    for task in window.startup_thread.tasks:
+        should_skip = not isinstance(task, startup.UpdateCheckTask)
+        mocker.patch.object(task, "should_skip", return_value=should_skip)
+
+    # Test 1 - Check that the first error does not notify the user.
+    window.dangerzone.settings.set("updater_check_all", True)
+    window.dangerzone.settings.set("updater_last_check", 0)
+    window.dangerzone.settings.set("updater_errors", 0)
+
+    # Make requests.get() return an error
+    mocker.patch("dangerzone.updater.releases.requests.get")
+    requests_mock = releases.requests.get
+    requests_mock.side_effect = Exception("failed")  # type: ignore [attr-defined]
+
+    handle_update_check_failed_spy = mocker.spy(window, "handle_update_check_failed")
+    load_svg_spy = mocker.spy(main_window_module, "load_svg_image")
+
+    menu_actions_before = window.hamburger_button.menu().actions()
+    check_for_updates_spy = mocker.spy(releases, "check_for_updates")
+    window.startup_thread.start()
+    window.startup_thread.wait()
+
+    qtbot.waitUntil(handle_update_check_failed_spy.assert_called_once)
+
+    menu_actions_after = window.hamburger_button.menu().actions()
+
+    # Check that the callback function gets an update report.
+    handle_update_check_failed_spy.assert_called_once()
+    assert "failed" in handle_update_check_failed_spy.call_args.args[0]
+
+    # Check that the settings have been updated properly.
+    expected_settings = default_updater_settings()
+    expected_settings["updater_check_all"] = True
+    expected_settings["updater_last_check"] = window.dangerzone.settings.get(
+        "updater_last_check"
+    )
+    expected_settings["updater_errors"] += 1
+    assert window.dangerzone.settings.get_updater_settings() == expected_settings
+
+    # Check that the hamburger icon has not changed.
+    assert load_svg_spy.call_count == 0
+
+    # Check that no menu entries have been added.
+    assert menu_actions_before == menu_actions_after
+
+    # Test 2 - Check that the second error does not notify the user either.
+    handle_update_check_failed_spy.reset_mock()
+    window.dangerzone.settings.set("updater_last_check", 0)
+    window.startup_thread.start()
+    window.startup_thread.wait()
+
+    qtbot.waitUntil(handle_update_check_failed_spy.assert_called_once)
+
+    assert load_svg_spy.call_count == 0
+
+    # Check that the settings have been updated properly.
+    expected_settings["updater_errors"] += 1
+    expected_settings["updater_last_check"] = window.dangerzone.settings.get(
+        "updater_last_check"
+    )
+    assert window.dangerzone.settings.get_updater_settings() == expected_settings
+
+    # Check that no menu entries have been added.
+    assert menu_actions_before == menu_actions_after
+
+    # Test 3 - Check that a third error shows a new menu entry.
+    handle_update_check_failed_spy.reset_mock()
+    window.dangerzone.settings.set("updater_last_check", 0)
+    window.startup_thread.start()
+    window.startup_thread.wait()
+    qtbot.waitUntil(handle_update_check_failed_spy.assert_called_once)
+
+    menu_actions_after = window.hamburger_button.menu().actions()
+    assert len(menu_actions_after) == 6
+    assert menu_actions_after[2:] == menu_actions_before
+
+    # Check that the hamburger icon has changed with the expected SVG image.
+    assert load_svg_spy.call_count == 2
+    assert load_svg_spy.call_args_list[0].args[0] == "hamburger_menu_update_error.svg"
+    assert (
+        load_svg_spy.call_args_list[1].args[0] == "hamburger_menu_update_dot_error.svg"
+    )
+
+    error_action = menu_actions_after[0]
+    assert error_action.text() == "Update error"
+
+    separator = menu_actions_after[1]
+    assert separator.isSeparator()
+
+    # Check that clicking in the new menu entry, opens a dialog.
+    update_dialog_spy = mocker.spy(main_window_module, "UpdateDialog")
+
+    def check_dialog() -> None:
+        dialog = QtWidgets.QApplication.activeWindow()
+
+        update_dialog_spy.assert_called_once()
+        kwargs = update_dialog_spy.call_args.kwargs
+        assert kwargs["title"] == "Update check error"
+        assert "Something went wrong" in kwargs["intro_msg"]
+        assert "dangerzone.rocks" in kwargs["intro_msg"]
+        assert not kwargs["middle_widget"].toggle_button.isChecked()
+        collapsible_box = kwargs["middle_widget"]
+        text_browser = (
+            collapsible_box.layout().itemAt(1).widget().layout().itemAt(0).widget()
+        )
+        assert collapsible_box.toggle_button.text() == "Error Details"
+        assert "Encountered an exception" in text_browser.toPlainText()
+        assert "failed" in text_browser.toPlainText()
+
+        dialog.close()
+
+    QtCore.QTimer.singleShot(500, check_dialog)
+    error_action.trigger()
+
+
+##
+# Output directory persistence tests
+##
+
+
+def test_saved_output_dir_used_when_valid(
+    conversion_widget: ConversionWidget,
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    sample_pdf: str,
+    tmp_path: pathlib.Path,
+) -> None:
+    """When a saved output_dir exists on disk, it is used instead of the input file's directory."""
+    saved_dir = tmp_path / "my-safe-pdfs"
+    saved_dir.mkdir()
+    conversion_widget.dangerzone.settings.set("output_dir", str(saved_dir))
+
+    doc = Document(sample_pdf)
+    conversion_widget.documents_selected([doc])
+
+    assert conversion_widget.dangerzone.output_dir == str(saved_dir)
+
+
+def test_saved_output_dir_ignored_when_missing(
+    conversion_widget: ConversionWidget,
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    sample_pdf: str,
+) -> None:
+    """When the saved output_dir no longer exists, fall back to the input file's directory."""
+    conversion_widget.dangerzone.settings.set(
+        "output_dir", "/nonexistent/directory/that/does/not/exist"
+    )
+
+    doc = Document(sample_pdf)
+    conversion_widget.documents_selected([doc])
+
+    assert conversion_widget.dangerzone.output_dir == os.path.dirname(sample_pdf)
+
+
+def test_saved_output_dir_ignored_when_none(
+    conversion_widget: ConversionWidget,
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    sample_pdf: str,
+) -> None:
+    """When output_dir is None (fresh install), fall back to the input file's directory."""
+    assert conversion_widget.dangerzone.settings.get("output_dir") is None
+
+    doc = Document(sample_pdf)
+    conversion_widget.documents_selected([doc])
+
+    assert conversion_widget.dangerzone.output_dir == os.path.dirname(sample_pdf)
+
+
+def test_selecting_output_dir_persists_to_settings(
+    conversion_widget: ConversionWidget,
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    sample_pdf: str,
+    tmp_path: pathlib.Path,
+) -> None:
+    """When the user picks a new output directory, it is saved to settings."""
+    # First, select a document so the settings widget is available
+    doc = Document(sample_pdf)
+    conversion_widget.documents_selected([doc])
+
+    target_dir = tmp_path / "chosen-dir"
+    target_dir.mkdir()
+
+    # Mock the file dialog to return our target directory
+    mock_dialog = mocker.patch("dangerzone.gui.main_window.QtWidgets.QFileDialog")
+    mock_instance = mock_dialog.return_value
+    mock_instance.exec.return_value = QtWidgets.QFileDialog.Accepted
+    mock_instance.selectedFiles.return_value = [str(target_dir)]
+
+    conversion_widget.settings_widget.select_output_directory()
+
+    assert conversion_widget.dangerzone.settings.get("output_dir") == str(target_dir)
+
+
+##
+# Document Selection tests
+##
+
+
+def test_change_document_button(
+    conversion_widget: ConversionWidget,
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    sample_pdf: str,
+    sample_doc: str,
+    tmp_path: pathlib.Path,
+) -> None:
+    # Setup first doc selection
+    file_dialog_mock = mocker.MagicMock()
+    file_dialog_mock.selectedFiles.return_value = (sample_pdf,)
+    conversion_widget.doc_selection_widget.file_dialog = file_dialog_mock
+
+    # Select first file
+    with qtbot.waitSignal(conversion_widget.documents_added):
+        qtbot.mouseClick(
+            conversion_widget.doc_selection_widget.dangerous_doc_button,
+            QtCore.Qt.MouseButton.LeftButton,
+        )
+        file_dialog_mock.accept()
+
+    # Setup doc change
+    shutil.copy(sample_doc, tmp_path)
+    tmp_sample_doc = tmp_path / os.path.basename(sample_doc)
+    file_dialog_mock.selectedFiles.return_value = (tmp_sample_doc,)
+
+    # When clicking on "select docs" button
+    with qtbot.waitSignal(conversion_widget.documents_added):
+        qtbot.mouseClick(
+            conversion_widget.settings_widget.change_selection_button,
+            QtCore.Qt.MouseButton.LeftButton,
+        )
+        file_dialog_mock.accept()
+
+    # Then two dialogs should have been open
+    assert file_dialog_mock.exec.call_count == 2
+    assert file_dialog_mock.selectedFiles.call_count == 2
+
+    # Then the final document should be only the second one
+    docs = [
+        doc.input_filename
+        for doc in conversion_widget.dangerzone.get_unconverted_documents()
+    ]
+    assert len(docs) == 1
+    assert docs[0] == str(tmp_sample_doc)
+
+
+def test_drop_valid_documents(
+    conversion_widget: ConversionWidget,
+    drag_valid_files_event: QtGui.QDropEvent,
+    qtbot: QtBot,
+) -> None:
+    with qtbot.waitSignal(
+        conversion_widget.doc_selection_wrapper.documents_selected,
+        check_params_cb=lambda x: len(x) == 2 and isinstance(x[0], Document),
+    ):
+        conversion_widget.doc_selection_wrapper.dropEvent(drag_valid_files_event)
+
+
+def test_drop_text(
+    conversion_widget: ConversionWidget,
+    drag_text_event: QtGui.QDropEvent,
+    qtbot: QtBot,
+) -> None:
+    with qtbot.assertNotEmitted(
+        conversion_widget.doc_selection_wrapper.documents_selected
+    ):
+        conversion_widget.doc_selection_wrapper.dropEvent(drag_text_event)
+
+
+def test_drop_1_invalid_doc(
+    conversion_widget: ConversionWidget,
+    drag_1_invalid_file_event: QtGui.QDropEvent,
+    qtbot: QtBot,
+) -> None:
+    with qtbot.assertNotEmitted(
+        conversion_widget.doc_selection_wrapper.documents_selected
+    ):
+        conversion_widget.doc_selection_wrapper.dropEvent(drag_1_invalid_file_event)
+
+
+def test_drop_1_invalid_2_valid_documents(
+    conversion_widget: ConversionWidget,
+    drag_1_invalid_and_2_valid_files_event: QtGui.QDropEvent,
+    qtbot: QtBot,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    # If we accept to continue
+    monkeypatch.setattr(
+        conversion_widget.doc_selection_wrapper,
+        "prompt_continue_without",
+        lambda x: True,
+    )
+
+    # Then the 2 valid docs will be selected
+    with qtbot.waitSignal(
+        conversion_widget.doc_selection_wrapper.documents_selected,
+        check_params_cb=lambda x: len(x) == 2 and isinstance(x[0], Document),
+    ):
+        conversion_widget.doc_selection_wrapper.dropEvent(
+            drag_1_invalid_and_2_valid_files_event
+        )
+
+    # If we refuse to continue
+    monkeypatch.setattr(
+        conversion_widget.doc_selection_wrapper,
+        "prompt_continue_without",
+        lambda x: False,
+    )
+
+    # Then no docs will be selected
+    with qtbot.assertNotEmitted(
+        conversion_widget.doc_selection_wrapper.documents_selected,
+    ):
+        conversion_widget.doc_selection_wrapper.dropEvent(
+            drag_1_invalid_and_2_valid_files_event
+        )
+
+
+@pytest.mark.parametrize(
+    "strategy, callback",
+    [
+        (
+            InstallationStrategy.INSTALL_LOCAL_CONTAINER,
+            "handle_task_container_install_local",
+        ),
+        (
+            InstallationStrategy.INSTALL_REMOTE_CONTAINER,
+            "handle_task_container_install_remote",
+        ),
+    ],
+)
+def test_installation_strategy_message(
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    window: MainWindow,
+    strategy: InstallationStrategy,
+    callback: str,
+) -> None:
+    """Ensures that we send discreet signals when loading or downloading container
+    images.
+    """
+    mock_installer = mocker.patch("dangerzone.updater.installer.install")
+
+    for task in window.startup_thread.tasks:
+        should_skip = not isinstance(task, startup.ContainerInstallTask)
+        mocker.patch.object(task, "should_skip", return_value=should_skip)
+
+    mocker.patch(
+        "dangerzone.updater.installer.get_installation_strategy",
+        return_value=strategy,
+    )
+
+    # Disable the user prompt for remote container downloads in this test
+    window.dangerzone.settings.set("updater_ask_before_download", False)
+
+    status_bar_message_spy = mocker.spy(window.status_bar, callback)
+    log_window_message_spy = mocker.spy(window.log_window, callback)
+    window.startup_thread.start()
+    window.startup_thread.wait()
+    qtbot.waitUntil(status_bar_message_spy.assert_called_once)
+    qtbot.waitUntil(log_window_message_spy.assert_called_once)
+
+
+def test_installation_failure_exception(
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    """Ensures that if an exception is raised during image installation,
+    it is shown in the GUI.
+    """
+    mock_installer = mocker.patch(
+        "dangerzone.updater.installer.install",
+        side_effect=RuntimeError("Error during install"),
+    )
+    mock_strategy = mocker.patch(
+        "dangerzone.updater.installer.get_installation_strategy",
+        return_value=InstallationStrategy.INSTALL_LOCAL_CONTAINER,
+    )
+    for task in window.startup_thread.tasks:
+        should_skip = not isinstance(task, startup.ContainerInstallTask)
+        mocker.patch.object(task, "should_skip", return_value=should_skip)
+
+    handle_container_install_failed_spy = mocker.spy(
+        window.log_window, "handle_task_container_install_failed"
+    )
+    window.startup_thread.start()
+    window.startup_thread.wait()
+    qtbot.waitUntil(handle_container_install_failed_spy.assert_called_once)
+
+    assert mock_installer.call_count == 1
+    assert window.status_bar.property("style") == "status-error"
+    assert window.status_bar.message.text() == "Startup failed"
+    assert window.log_window.label.text() == "Installing Dangerzone sandbox… failed"
+    assert "Error during install" in window.log_window.traceback_widget.toPlainText()
+
+
+def test_close_event(
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    dummy: MagicMock,
+    window: MainWindow,
+) -> None:
+    """Test that Dangerzone shuts down normally on closeEvent."""
+    container_name = f"{container_utils.CONTAINER_PREFIX}test"
+    # Mock Podman machine manager
+    mock_podman_machine_manager = mocker.patch(
+        "dangerzone.shutdown.PodmanMachineManager"
+    )
+    # Mock the functions necessary to kill a container.
+    mock_list_containers = mocker.patch(
+        "dangerzone.container_utils.list_containers",
+        return_value=[container_name],
+    )
+    mock_kill_container = mocker.patch(
+        "dangerzone.container_utils.kill_container",
+    )
+    # Mock status bar updates
+    handle_shutdown_begin_spy = mocker.spy(window.status_bar, "handle_shutdown_begin")
+    handle_task_container_stop_spy = mocker.spy(
+        window.status_bar, "handle_task_container_stop"
+    )
+    handle_task_machine_stop_spy = mocker.spy(
+        window.status_bar, "handle_task_machine_stop"
+    )
+    # Mock the alert so that we can close the window.
+    mock_alert = mocker.patch("dangerzone.gui.main_window.Alert")
+    # Mock the exit method of the main window.
+    mock_exit_spy = mocker.spy(window.dangerzone.app, "exit")
+
+    window.close()
+    qtbot.waitUntil(mock_exit_spy.assert_called_once)
+    window.shutdown_thread.wait()
+
+    mock_alert.assert_called_once()
+    if platform.system() != "Linux":
+        mock_podman_machine_manager().stop.assert_called_once()
+        handle_task_machine_stop_spy.assert_called_once()
+    else:
+        mock_podman_machine_manager().stop.assert_not_called()
+        handle_task_machine_stop_spy.assert_not_called()
+    mock_list_containers.assert_called_once()
+    mock_kill_container.assert_called_once_with(container_name)
+    handle_shutdown_begin_spy.assert_called_once()
+    handle_task_container_stop_spy.assert_called_once()
+
+
+def test_user_prompts(qtbot: QtBot, window: MainWindow, mocker: MockerFixture) -> None:
+    """Test prompting users to ask them if they want to enable update checks."""
+    # First run
+    #
+    # When Dangerzone runs for the first time, users should not be asked to enable
+    # updates.
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.UpdateCheckTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    expected_settings = default_updater_settings()
+    expected_settings["updater_check_all"] = None
+    expected_settings["updater_last_check"] = 0
+
+    window.startup_thread.start()
+    window.startup_thread.wait()
+
+    assert window.dangerzone.settings.get_updater_settings() == expected_settings
+
+    # Second run
+    #
+    # When Dangerzone runs for a second time, users can be prompted to enable update
+    # checks. Depending on their answer, we should either enable or disable them.
+    prompt_mock = mocker.patch("dangerzone.gui.updater.UpdateCheckPrompt")
+    prompt_mock().x_pressed = False
+
+    # Check disabling update checks.
+    prompt_mock().launch.return_value = False
+    expected_settings["updater_check_all"] = False
+    handle_needs_user_input_spy = mocker.spy(
+        window, "handle_needs_user_input_enable_updates"
+    )
+
+    window.startup_thread.start()
+    window.startup_thread.wait()
+
+    qtbot.waitUntil(handle_needs_user_input_spy.assert_called_once)
+    assert window.dangerzone.settings.get_updater_settings() == expected_settings
+
+    # Reset the "updater_check_all" field and check enabling update checks.
+    window.dangerzone.settings.set("updater_check_all", None)
+    prompt_mock().launch.return_value = True
+    expected_settings["updater_check_all"] = True
+
+    handle_needs_user_input_spy.reset_mock()
+    window.startup_thread.start()
+    window.startup_thread.wait()
+
+    qtbot.waitUntil(handle_needs_user_input_spy.assert_called_once)
+    assert window.dangerzone.settings.get_updater_settings() == expected_settings
+
+    # Third run
+    #
+    # From the third run onwards, users should never be prompted for enabling update
+    # checks.
+    prompt_mock().side_effect = RuntimeError("Should not be called")
+    for check in [True, False]:
+        window.dangerzone.settings.set("updater_check_all", check)
+        assert releases.should_check_for_updates(window.dangerzone.settings) == check
+
+
+def test_machine_stop_others_user_input(
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    mocker.patch("platform.system", return_value="Darwin")
+    mock_podman_machine_manager = mocker.patch(
+        "dangerzone.startup.PodmanMachineManager"
+    )
+    mock_podman_machine_manager.return_value.list_other_running_machines.return_value = [
+        "other_machine"
+    ]
+    mocker.patch("dangerzone.shutdown.PodmanMachineManager")
+    mock_stop = mocker.patch("dangerzone.startup.MachineStopOthersTask.run")
+    mock_fail = mocker.patch("dangerzone.startup.MachineStopOthersTask.fail")
+
+    # Mock the Alert dialog
+    mock_question = mocker.patch("dangerzone.gui.main_window.Question")
+
+    # Simulate user choosing to stop the machine and remember choice
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Accepted
+    )
+    mock_question.return_value.checkbox.isChecked.return_value = False
+    mock_fail.return_value = False
+
+    # Ensure only MachineStopOthersTask runs
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.MachineStopOthersTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    handle_needs_user_input_stop_others_spy = mocker.spy(
+        window, "handle_needs_user_input_stop_others"
+    )
+    assert window.dangerzone.settings.get("stop_other_podman_machines") == "ask"
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_needs_user_input_stop_others_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    mock_stop.assert_called_once()
+
+    # Simulate user choosing to quit and remember choice
+    mock_question.reset_mock()
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Rejected
+    )
+    mock_question.return_value.checkbox.isChecked.return_value = True
+    mock_fail.assert_not_called()
+
+    mock_stop.reset_mock()
+
+    handle_needs_user_input_stop_others_spy.reset_mock()
+    exit_spy = mocker.spy(window.dangerzone.app, "exit")
+
+    window.startup_thread.start()
+    qtbot.waitUntil(exit_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    handle_needs_user_input_stop_others_spy.assert_called_once()
+    mock_question.assert_called_once()
+    mock_stop.assert_not_called()
+    assert window.dangerzone.settings.get("stop_other_podman_machines") == "never"
+    exit_spy.assert_called_once_with(2)
+    mock_fail.assert_called_once()
+
+
+def test_wsl_needs_install_user_input(
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    mocker.patch("platform.system", return_value="Windows")
+    mocker.patch("dangerzone.gui.startup.WSLInstallTask.prompt_reboot")
+    mocker.patch("dangerzone.windows.wsl.is_installed", return_value=False)
+    mock_wsl_install_and_check_reboot = mocker.patch(
+        "dangerzone.windows.wsl.install_and_check_reboot",
+    )
+    mocker.patch("dangerzone.shutdown.PodmanMachineManager")
+    mock_question = mocker.patch("dangerzone.gui.main_window.Question")
+    mocker.patch.object(window, "handle_wsl_install_failed")
+
+    handle_wsl_needs_install_spy = mocker.spy(window, "handle_wsl_needs_install")
+
+    # Scenario 1: User accepts install
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Accepted
+    )
+
+    # Ensure only WSLInstallTask runs
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.WSLInstallTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_wsl_needs_install_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    mock_wsl_install_and_check_reboot.assert_called_once()
+
+    handle_wsl_needs_install_spy.reset_mock()
+    mock_question.reset_mock()
+    mock_wsl_install_and_check_reboot.reset_mock()
+
+    # Scenario 2: User rejects install
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Rejected
+    )
+    begin_shutdown_spy = mocker.spy(window, "begin_shutdown")
+    exit_spy = mocker.spy(window.dangerzone.app, "exit")
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_wsl_needs_install_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    mock_wsl_install_and_check_reboot.assert_not_called()
+    begin_shutdown_spy.assert_called_once_with(2)
+    qtbot.waitUntil(exit_spy.assert_called_once)
+
+
+def test_wsl_needs_reboot_user_input(
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    mocker.patch("platform.system", return_value="Windows")
+    mocker.patch("dangerzone.gui.startup.WSLInstallTask.prompt_install")
+    mocker.patch("dangerzone.windows.wsl.is_installed", return_value=False)
+    mock_wsl_install_task_run = mocker.patch(
+        "dangerzone.windows.wsl.install_and_check_reboot",
+        side_effect=errors.WSLInstallNeedsReboot,
+    )
+    mocker.patch("dangerzone.shutdown.PodmanMachineManager")
+    mock_question = mocker.patch("dangerzone.gui.main_window.Question")
+    mock_install_failed = mocker.patch.object(window, "handle_wsl_install_failed")
+    mock_shutdown_cmd = mocker.patch("dangerzone.util.subprocess_run")
+
+    handle_wsl_needs_reboot_spy = mocker.spy(window, "handle_wsl_needs_reboot")
+
+    # Scenario 1: User accepts reboot
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Accepted
+    )
+
+    # Ensure only WSLInstallTask runs
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.WSLInstallTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_wsl_needs_reboot_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    mock_shutdown_cmd.assert_called_once_with(["shutdown", "/r", "/t", "0"])
+
+    handle_wsl_needs_reboot_spy.reset_mock()
+    mock_question.reset_mock()
+    mock_shutdown_cmd.reset_mock()
+
+    # Scenario 2: User rejects reboot
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Rejected
+    )
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_wsl_needs_reboot_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    mock_shutdown_cmd.assert_not_called()
+
+
+def test_wsl_install_failed_user_input(
+    qtbot: QtBot,
+    mocker: MockerFixture,
+    window: MainWindow,
+) -> None:
+    mocker.patch("platform.system", return_value="Windows")
+    mocker.patch("dangerzone.gui.startup.WSLInstallTask.prompt_install")
+    mocker.patch("dangerzone.windows.wsl.is_installed", return_value=False)
+    mock_wsl_install_task_run = mocker.patch(
+        "dangerzone.windows.wsl.install_and_check_reboot",
+        side_effect=errors.WSLInstallFailed,
+    )
+    mock_wsl_error_widget_show = mocker.spy(window.wsl_error_widget, "show")
+    mock_begin_shutdown = mocker.spy(window, "begin_shutdown")
+    handle_wsl_install_failed_spy = mocker.spy(window, "handle_wsl_install_failed")
+
+    # Ensure only WSLInstallTask runs
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.WSLInstallTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_wsl_install_failed_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_wsl_error_widget_show.assert_called_once()
+    assert window.wsl_error_widget.isVisible()
+    assert not window.startup_error_widget.isVisible()
+    assert not window.conversion_widget.isVisible()
+
+
+def test_handle_needs_user_input_install_remote_container(
+    qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+) -> None:
+    """Test that user is prompted to download a remote container update."""
+    mock_get_installation_strategy = mocker.patch(
+        "dangerzone.gui.startup.installer.get_installation_strategy",
+        return_value=InstallationStrategy.INSTALL_REMOTE_CONTAINER,
+    )
+    mock_install = mocker.patch("dangerzone.updater.installer.install")
+
+    # Mock the Question dialog - user accepts downloading
+    mock_question = mocker.patch("dangerzone.gui.main_window.Question")
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Accepted
+    )
+    mock_question.return_value.checkbox.isChecked.return_value = False
+
+    # Ensure only ContainerInstallTask runs
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.ContainerInstallTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    handle_needs_user_input_spy = mocker.spy(
+        window, "handle_needs_user_input_install_remote_container"
+    )
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_needs_user_input_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    # Verify that download happened after user accepted
+    mock_install.assert_called_once()
+
+
+def test_handle_needs_user_input_install_remote_container_decline(
+    qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+) -> None:
+    """Test that download is skipped when user declines."""
+    mock_get_installation_strategy = mocker.patch(
+        "dangerzone.gui.startup.installer.get_installation_strategy",
+        return_value=InstallationStrategy.INSTALL_REMOTE_CONTAINER,
+    )
+    mock_install = mocker.patch("dangerzone.updater.installer.install")
+
+    # Mock the Question dialog - user declines downloading
+    mock_question = mocker.patch("dangerzone.gui.main_window.Question")
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Rejected
+    )
+    mock_question.return_value.checkbox.isChecked.return_value = False
+
+    # Ensure only ContainerInstallTask runs
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.ContainerInstallTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    handle_needs_user_input_spy = mocker.spy(
+        window, "handle_needs_user_input_install_remote_container"
+    )
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_needs_user_input_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    # Verify that download did NOT happen after user declined
+    mock_install.assert_not_called()
+
+
+def test_handle_needs_user_input_install_remote_container_checkbox(
+    qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+) -> None:
+    """Test that checking 'Always download' updates the setting."""
+    mock_get_installation_strategy = mocker.patch(
+        "dangerzone.gui.startup.installer.get_installation_strategy",
+        return_value=InstallationStrategy.INSTALL_REMOTE_CONTAINER,
+    )
+    mock_install = mocker.patch("dangerzone.updater.installer.install")
+
+    # Mock the Question dialog - user accepts and checks "always download"
+    mock_question = mocker.patch("dangerzone.gui.main_window.Question")
+    mock_question.return_value.launch.return_value = (
+        main_window_module.Question.Accepted
+    )
+    mock_question.return_value.checkbox.isChecked.return_value = True
+
+    # Ensure only ContainerInstallTask runs
+    for task in window.startup_thread.tasks:
+        if not isinstance(task, startup.ContainerInstallTask):
+            mocker.patch.object(task, "should_skip", return_value=True)
+
+    handle_needs_user_input_spy = mocker.spy(
+        window, "handle_needs_user_input_install_remote_container"
+    )
+
+    # Verify initial setting
+    assert window.dangerzone.settings.get("updater_ask_before_download") == True
+
+    window.startup_thread.start()
+    qtbot.waitUntil(handle_needs_user_input_spy.assert_called_once)
+    window.startup_thread.wait()
+
+    mock_question.assert_called_once()
+    # Verify that download happened
+    mock_install.assert_called_once()
+    # Verify that the setting was updated to False (don't ask again)
+    assert window.dangerzone.settings.get("updater_ask_before_download") == False
+
+
+class TestShutdown:
+    def test_begin_shutdown_no_install_required(
+        self, qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+    ) -> None:
+        """Test that shutdown is immediate if no container runtime is used."""
+        mocker.patch.object(
+            window.dangerzone.isolation_provider, "requires_install", return_value=False
+        )
+        mock_exit = mocker.spy(window, "exit")
+        mock_shutdown_thread = mocker.patch("dangerzone.gui.shutdown.ShutdownThread")
+
+        window.begin_shutdown(0)
+
+        mock_exit.assert_called_once_with(0)
+        mock_shutdown_thread.assert_not_called()
+
+    def test_shutdown_with_active_conversion(
+        self, qtbot: QtBot, mocker: MockerFixture, window: MainWindow
+    ) -> None:
+        """Test that the user is prompted before quitting during a conversion."""
+        # Mock that there is a conversion in progress
+        mocker.patch.object(
+            window.dangerzone,
+            "get_converting_documents",
+            return_value=[mocker.MagicMock()],
+        )
+        mock_alert = mocker.patch("dangerzone.gui.main_window.Alert")
+        mock_begin_shutdown = mocker.patch.object(window, "begin_shutdown")
+
+        # Simulate user rejecting the exit
+        mock_alert.return_value.launch.return_value = False
+        event = QtGui.QCloseEvent()
+        window.closeEvent(event)
+        assert event.isAccepted() is False
+        mock_begin_shutdown.assert_not_called()
+
+        # Simulate user accepting the exit
+        mock_alert.return_value.launch.return_value = True
+        event = QtGui.QCloseEvent()
+        window.closeEvent(event)
+        assert event.isAccepted() is False  # Ignored because shutdown thread takes over
+        mock_begin_shutdown.assert_called_once_with(2)
+
+
+class TestRestartConversion:
+    def test_restart_button_hidden_initially(
+        self, conversion_widget: ConversionWidget
+    ) -> None:
+        assert conversion_widget.restart_button.isHidden()
+
+    def test_restart_button_shown_when_all_conversions_finish(
+        self, conversion_widget: ConversionWidget, qtbot: QtBot
+    ) -> None:
+        with qtbot.waitSignal(
+            conversion_widget.documents_list.all_conversions_finished
+        ):
+            conversion_widget.documents_list.all_conversions_finished.emit()
+        assert not conversion_widget.restart_button.isHidden()
+
+    def test_signal_emitted_only_when_all_docs_done(
+        self,
+        conversion_widget: ConversionWidget,
+        qtbot: QtBot,
+        sample_pdf: str,
+        sample_doc: str,
+    ) -> None:
+        doc1 = Document(sample_pdf)
+        doc2 = Document(sample_doc)
+        conversion_widget.documents_list.docs_list = [doc1, doc2]
+
+        doc1.state = Document.STATE_SAFE
+        with qtbot.assertNotEmitted(
+            conversion_widget.documents_list.all_conversions_finished
+        ):
+            conversion_widget.documents_list._on_doc_done()
+
+        doc2.state = Document.STATE_FAILED
+        with qtbot.waitSignal(
+            conversion_widget.documents_list.all_conversions_finished
+        ):
+            conversion_widget.documents_list._on_doc_done()
+
+    def test_reset_clears_state(
+        self,
+        conversion_widget: ConversionWidget,
+        qtbot: QtBot,
+        sample_pdf: str,
+    ) -> None:
+        doc = Document(sample_pdf)
+        conversion_widget.dangerzone.add_document(doc)
+        conversion_widget.documents_list.documents_added([doc])
+        conversion_widget.conversion_started = True
+        conversion_widget.documents_list.show()
+        conversion_widget.restart_button.show()
+        conversion_widget.doc_selection_wrapper.hide()
+
+        qtbot.mouseClick(
+            conversion_widget.restart_button, QtCore.Qt.MouseButton.LeftButton
+        )
+
+        assert not conversion_widget.conversion_started
+        assert conversion_widget.documents_list.isHidden()
+        assert conversion_widget.restart_button.isHidden()
+        assert not conversion_widget.doc_selection_wrapper.isHidden()
+        assert conversion_widget.documents_list.docs_list == []
+        assert len(conversion_widget.dangerzone.get_unconverted_documents()) == 0
+
+    def test_new_conversion_after_reset(
+        self,
+        conversion_widget: ConversionWidget,
+        sample_pdf: str,
+    ) -> None:
+        conversion_widget.documents_selected([Document(sample_pdf)])
+        conversion_widget.conversion_started = True
+        conversion_widget.reset_for_new_conversion()
+
+        conversion_widget.documents_selected([Document(sample_pdf)])
+
+        assert len(conversion_widget.dangerzone.get_unconverted_documents()) == 1
+        assert not conversion_widget.settings_widget.isHidden()

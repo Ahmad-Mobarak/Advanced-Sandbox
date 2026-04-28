@@ -1,0 +1,40 @@
+[package]
+name = "enarx-shim-sgx"
+version = "0.7.1"
+edition = "2021"
+description = "Enarx SGX shim"
+authors = ["The Enarx Project Developers"]
+repository = "https://github.com/enarx/sallyport"
+license = "Apache-2.0"
+
+[features]
+gdb = ["dep:gdbstub", "dep:gdbstub_arch", "dbg"]
+dbg = []
+bench = []
+disable-sgx-attestation = []
+
+[dependencies]
+bitflags = { workspace = true }
+const-default = { workspace = true }
+crt0stack = { workspace = true }
+goblin = { workspace = true }
+mmledger = { workspace = true }
+noted = { workspace = true }
+primordial = { workspace = true, features = ["const-default"] }
+rcrt1 = { workspace = true }
+sallyport = { workspace = true }
+sgx = { workspace = true }
+spin = { workspace = true }
+x86_64 = { workspace = true }
+xsave = { workspace = true }
+
+# optional dependencies
+gdbstub = { workspace = true, optional = true }
+gdbstub_arch = { workspace = true, optional = true }
+
+[dev-dependencies]
+testaso = { workspace = true }
+
+[[bin]]
+name = "enarx-shim-sgx"
+test = false

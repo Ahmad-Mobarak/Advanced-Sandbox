@@ -1,0 +1,15 @@
+[package]
+name = "enarx_exec_tests"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+der = { workspace = true }
+hex = { workspace = true }
+libc = { workspace = true }
+sallyport = { workspace = true }
+x509-cert = { workspace = true }
+
+[dev-dependencies]
+testaso = { workspace = true }
