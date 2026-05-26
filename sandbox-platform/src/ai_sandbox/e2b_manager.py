@@ -39,8 +39,9 @@ class RealE2BManager(E2BManager):
             
         start_time = time.time()
         try:
-            # Note: E2B provides synchronous APIs mostly, using run_in_executor in production
-            sandbox = self.Sandbox(api_key=self.api_key)
+            # In E2B SDK v2, we use Sandbox.create()
+            # Note: Sandbox.create() is synchronous by default
+            sandbox = self.Sandbox.create(api_key=self.api_key)
             
             # Install dependencies
             if request.dependencies:
@@ -53,20 +54,30 @@ class RealE2BManager(E2BManager):
             # Execute code
             execution = sandbox.run_code(
                 request.code, 
-                language=request.language,
-                timeout=request.timeout_seconds
+                language=request.language
             )
             
             end_time = time.time()
             sandbox.close()
 
+            # In v2, execution.logs contains the output
+            stdout = "".join(log.line for log in execution.logs.stdout)
+            stderr = "".join(log.line for log in execution.logs.stderr)
+            
+            # Check for execution error
+            error_msg = None
+            if execution.error:
+                error_msg = f"{execution.error.name}: {execution.error.value}"
+                if execution.error.traceback:
+                    stderr += "\n" + execution.error.traceback
+
             return SandboxExecutionResult(
                 execution_id=str(uuid.uuid4()),
                 status="success" if not execution.error else "error",
-                stdout="".join(m.line for m in execution.logs.stdout),
-                stderr="".join(m.line for m in execution.logs.stderr),
+                stdout=stdout,
+                stderr=stderr,
                 execution_time_ms=int((end_time - start_time) * 1000),
-                error_message=execution.error.message if execution.error else None
+                error_message=error_msg
             )
         except Exception as e:
             end_time = time.time()

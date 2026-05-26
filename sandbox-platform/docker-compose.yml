@@ -141,7 +141,7 @@ services:
     networks:
       - sandbox-network
     profiles:
-      - full
+      - misp
 
   misp-db:
     image: mariadb:10.11
@@ -156,7 +156,7 @@ services:
     networks:
       - sandbox-network
     profiles:
-      - full
+      - misp
 
   # ============================================================================
   # Elasticsearch - For Behavioral Log Storage
@@ -248,8 +248,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - capev2
-      - misp
     networks:
       - sandbox-network
     profiles:
