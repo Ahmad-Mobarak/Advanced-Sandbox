@@ -117,11 +117,34 @@ SUSPICIOUS_SEQUENCES = [
 ]
 
 
-class EBPFTracer:
-    """eBPF telemetry pipeline with simulated and live modes."""
+from abc import ABC, abstractmethod
 
-    def __init__(self, mode: str = "simulated", output_dir: Optional[Path] = None):
-        self.mode = mode
+class AbstractEBPFTracer(ABC):
+    @abstractmethod
+    def generate_trace(self, sample_id: str, behavior_profile: str = "malicious", duration_seconds: float = 10.0, event_count: int = 200) -> List[SyscallEvent]:
+        pass
+
+    @abstractmethod
+    def write_ndjson(self, events: Optional[List[SyscallEvent]] = None, filename: Optional[str] = None) -> Path:
+        pass
+
+    @abstractmethod
+    def compute_metrics(self, events: Optional[List[SyscallEvent]] = None) -> TelemetryMetrics:
+        pass
+
+    @abstractmethod
+    def detect_suspicious_sequences(self, events: Optional[List[SyscallEvent]] = None) -> List[Dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    async def stream_events(self, sample_id: str, behavior_profile: str = "malicious", callback: Optional[Callable[[SyscallEvent], None]] = None) -> AsyncGenerator[SyscallEvent, None]:
+        pass
+
+class SimulatedEBPFTracer(AbstractEBPFTracer):
+    """Simulated eBPF telemetry pipeline."""
+
+    def __init__(self, output_dir: Optional[Path] = None):
+
         self.output_dir = output_dir or TELEMETRY_OUTPUT_DIR
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._events: List[SyscallEvent] = []
@@ -261,3 +284,33 @@ class EBPFTracer:
             if callback:
                 callback(event)
             await asyncio.sleep(0.01)
+
+class RealEBPFTracer(AbstractEBPFTracer):
+    """Real eBPF telemetry pipeline connecting to Azazel tracer (Linux/Future)."""
+    
+    def __init__(self, output_dir: Optional[Path] = None):
+        self.output_dir = output_dir or TELEMETRY_OUTPUT_DIR
+        self._events: List[SyscallEvent] = []
+
+    def generate_trace(self, sample_id: str, behavior_profile: str = "malicious", duration_seconds: float = 10.0, event_count: int = 200) -> List[SyscallEvent]:
+        logger.warning("RealEBPFTracer is a stub. No real eBPF probes are connected.")
+        return []
+
+    def write_ndjson(self, events: Optional[List[SyscallEvent]] = None, filename: Optional[str] = None) -> Path:
+        return self.output_dir / "stub.ndjson"
+
+    def compute_metrics(self, events: Optional[List[SyscallEvent]] = None) -> TelemetryMetrics:
+        return TelemetryMetrics()
+
+    def detect_suspicious_sequences(self, events: Optional[List[SyscallEvent]] = None) -> List[Dict[str, Any]]:
+        return []
+
+    async def stream_events(self, sample_id: str, behavior_profile: str = "malicious", callback: Optional[Callable[[SyscallEvent], None]] = None) -> AsyncGenerator[SyscallEvent, None]:
+        logger.warning("RealEBPFTracer stream_events is a stub.")
+        yield SyscallEvent(timestamp=time.time(), pid=0, tid=0, process_name="stub", syscall_name="stub", syscall_nr=0)
+
+def get_ebpf_tracer(mode: str = "simulated", output_dir: Optional[Path] = None) -> AbstractEBPFTracer:
+    if mode == "live":
+        return RealEBPFTracer(output_dir)
+    return SimulatedEBPFTracer(output_dir)
+

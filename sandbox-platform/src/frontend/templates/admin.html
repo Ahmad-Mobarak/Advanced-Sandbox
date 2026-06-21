@@ -1,0 +1,329 @@
+{% extends "_base.html" %}
+
+{% block title %}Admin Panel - Sandbox Platform{% endblock %}
+
+{% block breadcrumbs %}
+<span class="breadcrumb-current">Admin Panel</span>
+{% endblock %}
+
+{% block content %}
+<!-- Active Page Helper -->
+{% set active_page = "admin" %}
+
+<div class="page-title-section">
+    <div>
+        <h1 class="page-title">System Administration</h1>
+        <p class="page-subtitle">Configure system backends, monitor queues, and manage user identities.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; margin-bottom: 2rem;" class="admin-grid-responsive">
+    
+    <!-- Left Column: System stats & ML controls -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- System Overview Box -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-server" style="color: var(--primary);"></i> Queue Overview</h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Queue Pending Tasks</span>
+                        <span class="mono" style="font-weight: 700; font-size: 1.1rem; color: var(--warning);">{{ queue_stats.get('pending', 0) }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Total Queue Processed</span>
+                        <span class="mono" style="font-weight: 700; font-size: 1.1rem; color: var(--success);">{{ queue_stats.get('total', 0) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ML Retraining Box -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-brain" style="color: var(--accent);"></i> Machine Learning</h3>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">Trigger manual model retraining using the analyst-marked ground-truth tags to lower misclassification rate.</p>
+                
+                <button id="btn-retrain" class="btn btn-primary" onclick="triggerRetraining()" style="width: 100%; background: linear-gradient(135deg, var(--accent) 0%, #be185d 100%); border-color: var(--accent);">
+                    <i class="fa-solid fa-arrows-rotate" id="retrain-icon"></i>
+                    <span id="retrain-text">Trigger ML Retraining</span>
+                </button>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Right Column: User Management Table -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-users" style="color: var(--primary);"></i> User Management</h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email Address</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td style="font-weight: 600; color: var(--text-primary);">{{ user.username }}</td>
+                            <td class="mono" style="font-size: 0.85rem; color: var(--text-secondary);">{{ user.email }}</td>
+                            <td>
+                                <span class="badge badge-unknown" style="border: 1px solid var(--primary-glow); color: var(--primary); background: var(--primary-glow);">
+                                    {{ user.role }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.active %}
+                                <span class="badge badge-completed">Active</span>
+                                {% else %}
+                                <span class="badge badge-failed">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.username != 'admin' or current_user.username == 'admin' %}
+                                <button class="btn btn-secondary btn-sm" onclick="openEditUserModal('{{ user.id }}', '{{ user.username }}', '{{ user.role }}', {{ 'true' if user.active else 'false' }})">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </button>
+                                {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled style="opacity: 0.5; cursor: not-allowed;" title="Cannot edit superadmin">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live Kasm Workspaces Card -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title"><i class="fa-solid fa-server" style="color: var(--warning);"></i> Live Kasm Workspaces</h3>
+        <button class="btn btn-secondary btn-sm" onclick="fetchKasmSessions()">
+            <i class="fa-solid fa-arrows-rotate" id="kasm-refresh-icon"></i> Refresh
+        </button>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="data-table-container">
+            <table class="data-table" id="kasm-sessions-table">
+                <thead>
+                    <tr>
+                        <th>Container ID</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>CPU</th>
+                        <th>Memory</th>
+                        <th>Duration</th>
+                        <th>Start Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="kasm-sessions-body">
+                    <tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading sessions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 900px) {
+        .admin-grid-responsive {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="card" style="width: 100%; max-width: 400px; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">Edit User: <span id="editUsername" style="color: var(--primary);"></span></h3>
+        <input type="hidden" id="editUserId">
+        
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <label class="form-label" for="editUserRole">System Role</label>
+            <select id="editUserRole" class="form-select" style="width: 100%;">
+                <option value="admin">Admin (Full Access)</option>
+                <option value="analyst">Analyst (Standard Access)</option>
+                <option value="readonly">Read-Only (View Only)</option>
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-top: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+            <input type="checkbox" id="editUserActive" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+            <label class="form-label" for="editUserActive" style="margin: 0; cursor: pointer;">Account is Active (Allowed to Login)</label>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeEditUserModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveUserEdit()">Save Changes</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function triggerRetraining() {
+        // Confirm retraining dialog
+        const isConfirmed = confirm("Are you sure you want to trigger background retraining for the ML prediction models?");
+        if (!isConfirmed) return;
+
+        const btn = document.getElementById('btn-retrain');
+        const icon = document.getElementById('retrain-icon');
+        const text = document.getElementById('retrain-text');
+
+        btn.disabled = true;
+        icon.classList.add('fa-spin');
+        text.innerText = 'Retraining Initiated...';
+
+        try {
+            const res = await fetch('/api/v1/admin/retrain-ml', { method: 'POST' });
+            const data = await res.json();
+            
+            if (res.ok) {
+                showToast(data.message || "ML Retraining script triggered in background", "success");
+            } else {
+                const detail = data.detail || 'Internal pipeline execution failed';
+                showToast("Retrain Failed: " + detail, "danger");
+            }
+        } catch (err) {
+            showToast("Network connection error triggering ML retraining", "danger");
+        } finally {
+            btn.disabled = false;
+            icon.classList.remove('fa-spin');
+            text.innerText = 'Trigger ML Retraining';
+        }
+    }
+
+    function openEditUserModal(id, username, role, active) {
+        document.getElementById('editUserId').value = id;
+        document.getElementById('editUsername').innerText = username;
+        document.getElementById('editUserRole').value = role;
+        document.getElementById('editUserActive').checked = active;
+        document.getElementById('editUserModal').style.display = 'flex';
+    }
+
+    function closeEditUserModal() {
+        document.getElementById('editUserModal').style.display = 'none';
+    }
+
+    async function saveUserEdit() {
+        const id = document.getElementById('editUserId').value;
+        const role = document.getElementById('editUserRole').value;
+        const active = document.getElementById('editUserActive').checked;
+        
+        if (!confirm("Are you sure you want to save these permission changes?")) return;
+        
+        try {
+            const res = await fetch(`/api/v1/admin/users/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: role, active: active })
+            });
+            if (res.ok) {
+                showToast("User updated successfully", "success");
+                closeEditUserModal();
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                const data = await res.json();
+                showToast("Failed to update user: " + (data.detail || "Error"), "danger");
+            }
+        } catch (e) {
+            showToast("Network error occurred", "danger");
+        }
+    }
+
+    // Kasm Live Session Management
+    async function fetchKasmSessions() {
+        const icon = document.getElementById('kasm-refresh-icon');
+        const tbody = document.getElementById('kasm-sessions-body');
+        
+        icon.classList.add('fa-spin');
+        
+        try {
+            const res = await fetch('/api/v1/admin/kasm/sessions');
+            const sessions = await res.json();
+            
+            tbody.innerHTML = '';
+            
+            if (!sessions || sessions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No active Kasm sessions found.</td></tr>';
+                return;
+            }
+            
+            sessions.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.id = `kasm-${s.id}`;
+                tr.innerHTML = `
+                    <td class="mono" style="font-weight: 600; color: var(--primary);">${s.id}</td>
+                    <td>${s.owner}</td>
+                    <td><span class="badge badge-${s.status === 'running' ? 'completed' : (s.status.includes('Simulated') ? 'unknown' : 'failed')}">${s.status}</span></td>
+                    <td class="mono" style="font-size: 0.8rem;">${s.cpu}</td>
+                    <td class="mono" style="font-size: 0.8rem;">${s.memory}</td>
+                    <td>${s.duration}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary);">${new Date(s.start_time).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; border-color: transparent;" onclick="terminateKasmSession('${s.id}')" title="Terminate Session">
+                            <i class="fa-solid fa-power-off" style="color: var(--danger);"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--danger);">Failed to load sessions.</td></tr>';
+        } finally {
+            icon.classList.remove('fa-spin');
+        }
+    }
+
+    async function terminateKasmSession(containerId) {
+        if (!confirm(`Are you sure you want to FORCEFULLY terminate container ${containerId}? This will immediately kill the user's browser session.`)) return;
+        
+        const tr = document.getElementById(`kasm-${containerId}`);
+        const btn = tr.querySelector('button');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+        
+        try {
+            const res = await fetch(`/api/v1/admin/kasm/sessions/${containerId}`, { method: 'DELETE' });
+            if (res.ok) {
+                tr.remove();
+                showToast("Session terminated successfully", "success");
+            } else {
+                const data = await res.json();
+                showToast("Failed to terminate session: " + (data.detail || "Error"), "danger");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-power-off" style="color: var(--danger);"></i>';
+            }
+        } catch (e) {
+            showToast("Network error occurred", "danger");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-power-off" style="color: var(--danger);"></i>';
+        }
+    }
+
+    // Load sessions on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchKasmSessions();
+    });
+</script>
+{% endblock %}

@@ -142,7 +142,26 @@ SANDBOX_RULES: List[FalcoRuleDefinition] = [
 # Falco Monitor
 # ============================================================================
 
-class FalcoMonitor:
+from abc import ABC, abstractmethod
+
+class AbstractFalcoMonitor(ABC):
+    @abstractmethod
+    def generate_alerts(self, sample_id: str, behavior_profile: str = "malicious", count: Optional[int] = None) -> List[FalcoAlert]:
+        pass
+
+    @abstractmethod
+    def compute_summary(self, alerts: Optional[List[FalcoAlert]] = None) -> SecuritySummary:
+        pass
+
+    @abstractmethod
+    def correlate_with_analysis(self, alerts: List[FalcoAlert], sample_id: str) -> List[FalcoAlert]:
+        pass
+
+    @abstractmethod
+    def get_mitre_coverage(self, alerts: Optional[List[FalcoAlert]] = None) -> Dict[str, int]:
+        pass
+
+class SimulatedFalcoMonitor(AbstractFalcoMonitor):
     """
     Falco runtime security monitor.
 
@@ -150,8 +169,7 @@ class FalcoMonitor:
     In live mode (future), connects to Falco's HTTP/gRPC output.
     """
 
-    def __init__(self, mode: str = "simulated", falco_url: Optional[str] = None):
-        self.mode = mode
+    def __init__(self, falco_url: Optional[str] = None):
         self.falco_url = falco_url or FALCO_URL
         self.rules = list(SANDBOX_RULES)
         self._alerts: List[FalcoAlert] = []
@@ -295,3 +313,27 @@ class FalcoMonitor:
             if a.mitre_attack_id
         )
         return dict(mitre_counter)
+
+class RealFalcoMonitor(AbstractFalcoMonitor):
+    """Real Falco runtime security monitor connecting to Falco gRPC/HTTP output (Linux/Future)."""
+    def __init__(self, falco_url: Optional[str] = None):
+        self.falco_url = falco_url or FALCO_URL
+        self._alerts: List[FalcoAlert] = []
+
+    def generate_alerts(self, sample_id: str, behavior_profile: str = "malicious", count: Optional[int] = None) -> List[FalcoAlert]:
+        logger.warning("RealFalcoMonitor is a stub. No real Falco connection established.")
+        return []
+
+    def compute_summary(self, alerts: Optional[List[FalcoAlert]] = None) -> SecuritySummary:
+        return SecuritySummary()
+
+    def correlate_with_analysis(self, alerts: List[FalcoAlert], sample_id: str) -> List[FalcoAlert]:
+        return []
+
+    def get_mitre_coverage(self, alerts: Optional[List[FalcoAlert]] = None) -> Dict[str, int]:
+        return {}
+
+def get_falco_monitor(mode: str = "simulated", falco_url: Optional[str] = None) -> AbstractFalcoMonitor:
+    if mode == "live":
+        return RealFalcoMonitor(falco_url)
+    return SimulatedFalcoMonitor(falco_url)

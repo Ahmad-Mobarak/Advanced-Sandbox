@@ -1,0 +1,563 @@
+Setting Default Listening Port as 8443
+
+
+End User License Agreement
+__________________________
+
+
+KASM WORKSPACES END USER LICENSE AGREEMENT 
+
+BY DOWNLOADING, INSTALLING, OR USING THE SOFTWARE, YOU AGREE TO THE TERMS OF 
+THIS END USER LICENSE AGREEMENT (“EULA”). IF YOU DO NOT AGREE TO THESE TERMS, YOU 
+MUST NOT DOWNLOAD, INSTALL, OR USE THE SOFTWARE, AND YOU MUST DELETE THE 
+SOFTWARE AND REQUEST A REFUND OF THE LICENSE FEE. 
+
+1. DEFINITIONS 
+
+1.1.  “Documentation” means that documentation that is generally provided to You by Kasm 
+Technologies with the Software and which may include end user manuals, operation instructions, 
+installation guides, release notes, and on-line help files regarding the use of the Software. 
+
+1.2.  “Kasm Technologies” means Kasm Technologies Inc, a Virginia corporation, located at 1765 
+Greensboro Station Place STE 900, MCLEAN, VA 22102.  
+
+1.3.  “License” means a license granted under Section 2.1 (General License Grant).  
+
+1.4.  “Open-Source Software” or “OSS” means software components embedded in the Software 
+and provided under separate license terms, which can be found in the open_source_licenses.txt file 
+provided within the Software. 
+
+1.5.  “Order” means a purchase order, enterprise license agreement, or other ordering document 
+issued by You to Kasm Technologies or a Kasm Technologies authorized reseller that references and 
+incorporates this EULA and is accepted by Kasm Technologies. No Orders are binding on Kasm 
+Technologies until accepted by Kasm Technologies. 
+
+1.6.  “Software” means the Kasm Technologies computer programs to which You acquire a license 
+under an Order, together with any software code pursuant to a support and/or subscription service 
+contract and that is not subject to a separate license agreement.  
+
+1.7.  “You” means the individual, company or other legal entity using the software. 
+
+2. LICENSE GRANT 
+
+2.1.  General License Grant. Kasm Technologies grants to You a non-exclusive, non-transferable  
+license to use the Software and Documentation for the duration of the license solely for Your 
+business operations, and subject to the provisions of your Order, Documentation and related support 
+agreements. 
+
+2.2. Community Edition Restrictions. The Community Edition of the Kasm Workspaces license is 
+restricted to the following usage and may not be used for revenue-generating business activities. 
+Notwithstanding any other provision in this EULA, the Community Edition License of the Software is 
+provided “AS-IS” without indemnification, support or warranty of any kind, expressed or implied. 
+
+2.2.1.  Evaluation. Temporary usage of the Software to validate business requirements. 
+
+2.2.2.  Personal/Home. For use by an individual/household for personal, non-business activities.  
+
+2.2.3.  Non-Profit. For use by non-profit organizations or researchers.  
+
+2.3.  Software Support and Subscriptions. Except as expressly specified in your software Order, 
+Kasm Technologies does not provide any support or subscription services for the Software under this 
+EULA. You have no rights to any updates, upgrades or extensions or enhancements to the Software 
+developed by Kasm Technologies other than those defined in a separate software license Order. 
+
+2.4.  Software Updates. The Software may be updated with enhancements or improvements to the 
+features/functionality, which may include patches, bug fixes, updates, upgrades and other 
+modifications. Updates may modify or delete certain features and/or functionalities of the Software. 
+You agree that Kasm Technologies has no obligation to (i) provide any Updates, or (ii) continue to 
+provide Software features and/or functionalities. 
+
+2.5.  Third Party Agents. Under the License You may permit Your third-party agents to access, use 
+and/or operate the Software on Your behalf for the sole purpose of delivering services to You, 
+provided that You will be fully responsible for compliance with terms and conditions of this EULA and 
+any breach of this EULA by a third-party agent shall be deemed to be a breach by You.  
+
+2.6.  Open-Source Software. Notwithstanding anything herein to the contrary, Open-Source 
+Software is licensed to You under such OSS’s own applicable license terms. These OSS license 
+terms are consistent with the license granted in this Section. The OSS license terms shall take 
+precedence over this EULA to the extent that this EULA imposes greater restrictions on You than the 
+applicable OSS license terms. To the extent the license for any Open-Source Software requires 
+Kasm Technologies to make available to You the corresponding source code and/or modifications, 
+You may obtain a copy of the applicable Source Files.  
+
+3. RESTRICTIONS OF OWNERSHIP 
+
+3.1.  License Restrictions. Without Kasm Technologies’ prior written consent, You must not, and 
+must not allow any third-party to: (a) use Software in an application services provider except that You 
+may use the Software to deliver hosted services to Your affiliates; (b) make available Software in any 
+form to anyone other than Your employees, except as specified in Section 2.5 (Third Party Agents); 
+(c) transfer or sublicense Software or Documentation to an affiliate or any third party; (d) use 
+Software in conflict with the terms and restrictions of the Software’s licensing model and other 
+requirements specified in Documentation and/or Order; (e) except to the extent permitted by 
+applicable mandatory law, modify, translate, enhance, or create derivative works from the Software, 
+or reverse engineer, decompile, or otherwise attempt to derive source code from the Software; or (f) 
+violate or circumvent any technological restrictions within the Software or specified in this EULA.  
+
+3.2.  Ownership. The Software and Documentation and all improvements, enhancements, 
+modifications and derivative works thereof, and all Intellectual Property Rights therein, are and shall 
+remain the sole and exclusive property of Kasm Technologies. Intellectual property rights, including 
+without limitation, copyrights, trademarks, service marks, trade secrets, know how, inventions, 
+patents, patent applications, moral rights and all other proprietary rights, whether registered or 
+unregistered. Your rights to use the Software and Documentation shall be limited to those expressly 
+granted in this EULA and any applicable Order. No other rights with respect to the Software or any 
+related Intellectual Property Rights are implied. You are not authorized to use (and shall not permit 
+any third party to use) the Software, Documentation or any portion thereof except as expressly 
+authorized by this EULA or the applicable Order. Kasm Technologies reserves all rights not expressly 
+granted to You. 
+
+3.3. Third Party Software. You acknowledge that You are responsible for obtaining and complying 
+with any licenses necessary to integrate, orchestrate or access all third-party software used within the 
+Software.
+
+3.4. Software Feedback. Feedback, bug reports, enhancements or recommendations provided by
+You to Kasm Technologies for the purpose of improving the Software shall become exclusively 
+owned by Kasm Technologies and may be used/redistributed without compensation to the source of 
+the submission. 
+
+4. CONTENT AND USAGE 
+
+4.1.  Software Usage Responsibility. Kasm Technologies is not responsible for the information, 
+content and activities of the Software users. You understand and agree that You are solely 
+responsible for the content and for all activity that occurs under your Software, whether done so by 
+You or any third person. 
+
+4.2.  Content and Usage Disclaimer. Kasm Technologies does not control or restrict content or 
+activities by users and/or third parties within the Software, you agree to use the Software at your own 
+risk. You agree that under no circumstances will Kasm Technologies be liable in any way for any 
+content within the Software, activities performed using the Software, or any loss or damage incurred 
+as a result of your use of the Software. 
+
+5. WARRANTIES 
+
+5.1.  Software Warranty, Duration and Remedy. Kasm Technologies warrants to You that the 
+Software will, for a period of ninety (90) days following notice of availability for electronic download or 
+delivery (“Warranty Period”), substantially conform to the applicable Documentation, provided that 
+the Software: (a) has been properly installed and used at all times in accordance with the applicable 
+Documentation; and (b) has not been modified or added to by persons other than Kasm Technologies 
+or its authorized representative. Kasm Technologies will provide remedy for any breach of this 
+warranty, either replace that Software or correct any reproducible error in that Software reported to 
+Kasm Technologies by You in writing during the Warranty Period. If Kasm Technologies determines 
+that it is unable to correct the error or replace the Software, Kasm Technologies will refund to You the 
+amount paid by You for that Software, in which case the License for that Software will terminate.  
+
+5.2.  Software Disclaimer of Warranty. Other than the warranty above, and to the maximum extent 
+permitted by applicable law, Kasm Technologies and its suppliers make no other express warranties 
+or guarantees under this EULA, and disclaim all implied warranties of merchantability, fitness for a 
+particular purpose, title and non-infringement, and any warranty arising by statute, operation of law, 
+course of dealing or performance, or usage of trade. Kasm technologies and its licensors do not 
+warrant that the software will operate uninterrupted or that it will be free from defects or that it will 
+meet your requirements. 
+
+6. INTELLECTUAL PROPERTY INDEMNIFICATION 
+
+6.1.  Defense and Indemnification. Kasm Technologies shall defend You against any third party 
+claim that the Software infringes any patent, trademark or copyright of such third party, or 
+misappropriates a trade secret (but only to the extent that the misappropriation is not a result of Your 
+actions) and indemnify You from the resulting costs and damages finally awarded against You to 
+such third party by a court of competent jurisdiction or agreed to in settlement. The foregoing 
+obligations are applicable only if You: (i) promptly notify Kasm Technologies in writing of the 
+Infringement Claim; (ii) allow Kasm Technologies sole control over the defense for the claim, any 
+settlement negotiations and any related action challenging the validity of the allegedly infringed 
+patent, trademark, or copyright; and (iii) reasonably cooperate in response to Kasm Technologies 
+requests for assistance. You may not settle or compromise any Infringement Claim without the prior 
+written consent of Kasm Technologies.  
+
+6.2.  Remedies. If the alleged infringing Software become, or in Kasm Technologies’ opinion be likely 
+to become, the subject of an Infringement Claim, Kasm Technologies will, at Kasm Technologies’ 
+option and expense, do one of the following: (a) procure the rights necessary for You to make 
+continued use of the affected Software; (b) replace or modify the affected Software to make it non-
+infringing; or (c) terminate the License to the affected Software and discontinue the related support 
+services, and, upon Your certified deletion of the affected Software, refund: (i) the fees paid by You 
+for the License to the affected Software, less straight-line depreciation over a three (3) year useful life 
+beginning on the date such Software was delivered; and (ii) any pre-paid service fee attributable to 
+related support services to be delivered after the date such service is stopped.  
+
+6.3.  Exclusions. Notwithstanding the foregoing, Kasm Technologies will have no obligation under 
+this Section 8 (Intellectual Property Indemnification) or otherwise with respect to any claim based on: 
+(a) a combination of Software with non-Kasm Technologies products (other than non-Kasm 
+Technologies products that are listed on the Order and used in an unmodified form); (b) use for a 
+purpose or in a manner for which the Software was not designed; (c) use of any older version of the 
+Software when use of a newer Kasm Technologies version would have avoided the infringement; (d) 
+any modification to the Software made without Kasm Technologies’ express written approval; (e) any 
+claim that relates to open source software or freeware technology or any derivatives or other 
+adaptations thereof that is not embedded by Kasm Technologies into Software; or (f) any Software 
+provided on a no charge or evaluation basis. This Section 8 (intellectual property indemnification) 
+states your sole and exclusive remedy and Kasm Technologies’ entire liability for any infringement 
+claims or actions.  
+
+7. LIMITATION OF LIABILITY 
+
+7.1.  Limitation of Liability. To the maximum extent mandated by law, in no event will Kasm 
+Technologies and its licensors be liable for any lost profits or business opportunities, loss of use, loss 
+of revenue, loss of goodwill, business interruption, loss of data, or any indirect, special, incidental, or 
+consequential damages under any theory of liability, whether based in contract, tort, negligence, 
+product liability, or otherwise. Because some jurisdictions do not allow the exclusion or limitation of 
+liability for consequential or incidental damages, the preceding limitation may not apply to you. Kasm 
+Technologies’ and its licensors’ liability under this EULA will not, in any event, regardless of whether 
+the claim is based in contract, tort, strict liability, or otherwise, exceed the greater of the license fees 
+you paid for the software giving rise to the claim or $100. The foregoing limitations shall apply 
+regardless of whether Kasm Technologies or its licensors have been advised of the possibility of such 
+damages and regardless of whether any remedy fails of its essential purpose. You may not bring a 
+claim under this EULA more than twelve (12) months after the cause of action arises. 
+
+7.2.  Indemnification. You agree to indemnify and hold Kasm Technologies and its parents, 
+subsidiaries, affiliates, officers, employees, agents, partners and licensors (if any) harmless from any 
+claim or demand, including reasonable attorneys' fees, due to or arising out of your: (a) use of the 
+Software; (b) violation of this agreement or any law or regulation; or (c) violation of any right of a third 
+party. 
+
+8. TERMINATION.  
+
+8.1.  EULA Term. The term of this EULA begins on the notice of availability for electronic download 
+or delivery of the Software and continues until this EULA is terminated.  
+
+8.2.  Termination for Breach. Kasm Technologies may terminate this EULA effective immediately 
+upon written notice to You if: (a) You fail to pay any portion of the fees under an applicable Order 
+within ten (10) days after receiving written notice from Kasm Technologies that payment is past due; 
+or (b) You breach any other provision of this EULA and fail to cure within thirty (30) days after receipt 
+of Kasm Technologies’ written notice thereof.  
+
+8.3.  Termination for Insolvency. Kasm Technologies may terminate this EULA effective 
+immediately upon written notice to You if You: (a) terminate or suspend your business; (b) become 
+insolvent; or become subject to control of a trustee or similar authority; or (c) become subject to a 
+bankruptcy or insolvency proceeding.  
+
+8.4.  Effect of Termination. Upon Kasm Technologies’ termination of this EULA: (a) all Licensed 
+rights to all Software granted to You under this EULA will immediately cease; and (b) You must cease 
+all use of all Software, and certify destruction of all Software, confidential information, and license 
+keys. 
+
+9. CONFIDENTIAL INFORMATION 
+
+9.1.  “Confidential Information” means information or materials provided by one party (“Discloser”) 
+to the other party (“Recipient”) which are in tangible form and labelled “confidential” or the like, or, 
+information which a reasonable person knew or should have known to be confidential. The following 
+information shall be considered Confidential Information whether or not marked or identified as such: 
+(a) license keys; (b) information regarding Kasm Technologies’ pricing, product roadmaps or strategic 
+marketing plans; and (c) non-public materials relating to the Software.  
+
+9.2.  Protection. Recipient may use Confidential Information of Discloser; (a) to exercise its rights 
+and perform its obligations under this EULA; or (b) in connection with the parties’ ongoing business 
+relationship. Recipient will not use any Confidential Information of Discloser for any purpose not 
+expressly permitted by this EULA and will disclose the Confidential Information of Discloser only to 
+the employees or contractors of Recipient who have a need to know such Confidential Information for 
+purposes of this EULA and who are under a duty of confidentiality no less restrictive than Recipient’s 
+duty hereunder. Recipient will protect Confidential Information from unauthorized use, access, or 
+disclosure in the same manner as Recipient protects its own confidential or proprietary information of 
+a similar nature but with no less than reasonable care.  
+
+9.3. Data Privacy. You agree that Kasm Technologies may process technical and related information 
+about Your use of the Software which may include internet protocol address, hardware identification, 
+operating system, application software, peripheral hardware, and non-personally identifiable Software 
+usage statistics to facilitate the provisioning of updates, support, invoicing or online services. 
+
+10. GENERAL 
+
+10.1.  Transfers & Assignment. Except to the extent transfer may not legally be restricted, You will 
+not assign this EULA, any Order, or any right or obligation herein or delegate any performance 
+without Kasm Technologies’ prior written consent, which consent will not be unreasonably withheld. 
+Kasm Technologies may use sufficiently qualified subcontractors to provide services to You, provided 
+that Kasm Technologies remains responsible to You for the performance of the services.  
+
+10.2.  Waiver. The failure to exercise a right or to require performance of an obligation under this 
+Agreement shall not effect a party's ability to exercise such right or require such performance at any 
+time thereafter nor shall be the waiver of a breach constitute a waiver of any subsequent breach.  
+
+10.3.  Severability. If any provision of this Agreement is held to be unenforceable or invalid, such 
+provision will be changed and interpreted to accomplish the objectives of such provision to the 
+greatest extent possible under applicable law and the remaining provisions will continue in full force 
+and effect.  
+
+10.4.  Compliance with Laws; Export Control; Government Regulations. Each party shall comply 
+with all laws applicable to the actions contemplated by this EULA. You acknowledge that the Software 
+is of United States origin, is provided subject to the U.S. Export Administration Regulations, may 
+be subject to the export control laws of the applicable territory, and that diversion contrary to applicable 
+export control laws is prohibited. You represent that (1) you are not, and are not acting on behalf of, 
+(a) any person who is a citizen, national, or resident of, or who is controlled by the government of any 
+country to which the United States has prohibited export transactions; or (b) any person or entity 
+listed on the U.S. Treasury Department list of Specially Designated Nationals and Blocked Persons, 
+or the U.S. Commerce Department Denied Persons List or Entity List; and (2) you will not permit the 
+Software to be used for, any purposes prohibited by law, including, any prohibited development, 
+design, manufacture or production of missiles or nuclear, chemical or biological weapons. The 
+Software and accompanying documentation are deemed to be “commercial computer software” and 
+“commercial computer software documentation”, respectively, pursuant to DFARS Section 227.7202 
+and FAR Section 12.212(b), as applicable. Any use, modification, reproduction, release, performing, 
+displaying or disclosing of the Software and documentation by or for the U.S. Government shall be 
+governed solely by the terms and conditions of this EULA.  
+
+10.5.  Governing Law. This EULA is governed by the laws of the State of Virginia, United States of 
+America (excluding its conflict of law rules), and the federal laws of the United States. The state and 
+federal courts located in Virginia will be the exclusive jurisdiction for disputes. 
+
+10.6.  Order of Precedence. In the event of conflict or inconsistency among this EULA and the 
+Order, the terms of this EULA shall supersede and control over any conflicting or additional terms and 
+conditions of any order, acknowledgement or confirmation or other document issued by You.  
+
+10.7. Entire Agreement. This EULA, including accepted Orders and any amendments, contain the 
+entire agreement of the parties with respect to this EULA and supersede all previous or 
+contemporaneous communications, representations, proposals, commitments, understandings and 
+agreements, whether written or oral, between the parties. 
+
+10.8. Contact Information. Please direct legal notices or other correspondence to: 
+contracts@kasmweb.com 
+Kasm Technologies 
+1765 Greensboro Station Place STE 900 
+McLean, Virginia 22102 
+United States of America 
+
+
+A copy of the End User License Agreement is located at:
+/tmp/kasm_release/licenses/LICENSE.txt
+
+Checking if docker and docker compose are installed.
+Docker is installed
+29.4.1 is a supported version of docker.
+Docker compose is installed
+5.1.3 is a supported version of docker compose
+Commands docker and docker compose detected.
+Skipping Dependency Installation.
+Checking if DEFAULT_PROXY_LISTENING_PORT (8443) is free
+Port (8443) is not in use.
+Swap Exists
+df: /var/lib/docker: No such file or directory
+/tmp/kasm_release/install.sh: line 1237: [: : integer expected
+Installing All Services
+Updating configurations with custom DEFAULT_PROXY_LISTENING_PORT (8443)
+Docker network kasm_default_network already exists. Will not create
+Initializing Database
+Setting Seed file as /opt/kasm/1.15.0/conf/database/seed_data/default_properties.yaml
+Using Database Master User postgres
+Using Database Master Password from stdin -G
+time="2026-05-26T11:40:32+03:00" level=warning msg="/opt/kasm/1.15.0/docker/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container kasm_proxy Stopping 
+ Container kasm_proxy Stopped 
+ Container kasm_agent Stopping 
+ Container kasm_guac Stopping 
+ Container kasm_api Stopping 
+ Container kasm_share Stopping 
+ Container kasm_share Stopped 
+ Container kasm_redis Stopping 
+ Container kasm_api Stopped 
+ Container kasm_redis Stopped 
+ Container kasm_agent Stopped 
+ Container kasm_manager Stopping 
+ Container kasm_manager Stopped 
+ Container kasm_db Stopping 
+ Container kasm_guac Stopped 
+ Container kasm_db Stopped 
+kasm_db_1.15.0
+time="2026-05-26T11:40:35+03:00" level=warning msg="/opt/kasm/1.15.0/docker/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container kasm_db Creating 
+ Container kasm_db Created 
+ Container kasm_db Starting 
+ Container kasm_db Started 
+ Container kasm_db Waiting 
+ Container kasm_db Healthy 
+time="2026-05-26T11:41:07+03:00" level=warning msg="/opt/kasm/1.15.0/docker/.conf/docker-compose-api.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container conf-kasm_api-run-73a547021ae2 Creating 
+ Container conf-kasm_api-run-73a547021ae2 Created 
+2026-05-26 08:41:08,070 [INFO] root: Performing Database Connectivity Test
+2026-05-26 08:41:08,081 [INFO] root: Initializing Postgres Database
+2026-05-26 08:41:10,388 [INFO] root: Stamping Database with revision
+Dropping Existing Schema
+Creating Schema
+Creating Installation ID
+Replacing: (${uuid:group_setting_id:40}) with (233d7523-35c7-450d-9f73-e3ac63d5a351)
+Replacing: (${uuid:group_setting_id:1003}) with (f4d270e0-5134-47f3-a186-e35763cc692d)
+Replacing: (${uuid:group_setting_id:1023}) with (3d4f9b4d-31c5-42a0-b3d8-791de3a7d924)
+Replacing: (${uuid:user_id:2}) with (0da2c01a-5831-43e0-a659-e6a005f474f9)
+Replacing: (${uuid:group_setting_id:1007}) with (77456c93-15bc-4da0-bf58-b0ca9d98985e)
+Replacing: (${uuid:group_setting_id:36}) with (0cc2aa17-bbbe-4be8-92b0-85e19d3baa71)
+Replacing: (${uuid:group_setting_id:2003}) with (96fce16d-13db-42b0-80c1-782b20d51d96)
+Replacing: (${uuid:group_setting_id:1015}) with (803e09c1-1457-4f66-8b5f-d25f9e578cd6)
+Replacing: (${uuid:group_setting_id:1016}) with (17a2271b-739f-4e11-91c5-6bd5000bcfdf)
+Replacing: (${uuid:group_setting_id:23}) with (545bcb44-d3ae-4193-8000-c7b75710536c)
+Replacing: (${uuid:group_setting_id:1027}) with (f3041262-c9ab-4fd3-90a1-39a5df97b461)
+Replacing: (${uuid:group_setting_id:14}) with (c07ae8a4-2326-4dd3-8480-25886cee6133)
+Replacing: (${uuid:group_setting_id:49}) with (b6a6e856-486d-4978-a005-a2f4b07e3e96)
+Replacing: (${uuid:group_setting_id:50}) with (1a8af192-c679-40f0-864c-2763c9df2ac3)
+Replacing: (${uuid:group_setting_id:2002}) with (3f8e23b9-d5d7-4bf1-8e3e-cb93d5499b21)
+Replacing: (${uuid:group_setting_id:46}) with (f5945635-1c4e-478a-b72c-e91c9cc2ac93)
+Replacing: (${uuid:user_id:1}) with (6f3fda65-66e8-49fa-a169-3490bbf9cfd6)
+Replacing: (${uuid:zone_id:1}) with (8335f2ca-fa30-421f-96c7-f2c54e0886a2)
+Replacing: (${uuid:group_setting_id:19}) with (b7ceb9a2-f4fe-4642-8e8f-a1c663791e42)
+Replacing: (${uuid:group_setting_id:3}) with (f7b1289c-e729-4bf0-b7dd-9c17f9d03990)
+Replacing: (${uuid:group_setting_id:8}) with (ef0410d1-42d2-46c2-9f79-2d9b663d0d64)
+Replacing: (${uuid:group_setting_id:31}) with (03326058-35ed-465f-85ef-d26f60e82ba1)
+Replacing: (${uuid:group_setting_id:29}) with (9b14f9c6-94c2-48c1-b08c-87a49b080793)
+Replacing: (${uuid:group_setting_id:1025}) with (cb822466-5b6b-4cab-b5bf-2cfadb47e97c)
+Replacing: (${uuid:group_setting_id:1018}) with (3def064a-4178-4e27-bf66-c706c5dfd047)
+Replacing: (${uuid:group_setting_id:39}) with (e5152ab3-b9b1-49ca-85e1-191eac00e12d)
+Replacing: (${uuid:group_setting_id:44}) with (a00d9247-165d-4052-81d8-8e55a2857411)
+Replacing: (${uuid:group_setting_id:48}) with (04db94d2-2bdb-4519-b9b9-18c8f8047ea5)
+Replacing: (${uuid:group_setting_id:2004}) with (b92b4a47-5dce-4515-8695-17f263fcd7ea)
+Replacing: (${uuid:group_setting_id:22}) with (2606f8e0-7073-4a24-a2d7-2dfd6ce97bac)
+Replacing: (${uuid:group_setting_id:34}) with (c898e373-d145-4855-9745-732fafffd16d)
+Replacing: (${uuid:group_setting_id:25}) with (eb0c47ce-b639-4357-b88f-c034e20a9f1b)
+Replacing: (${uuid:group_setting_id:26}) with (0a302cd3-b93b-4f4e-8ec1-1b3d254e756e)
+Replacing: (${uuid:group_setting_id:1030}) with (1a8bab7f-dac5-454e-907d-ecb47ea77c5e)
+Replacing: (${uuid:group_setting_id:57}) with (57103a09-8cf2-4b15-8ce4-10bf33ace1a3)
+Replacing: (${uuid:group_setting_id:47}) with (7b9a2b00-eab2-4475-92a2-5dfdd459f265)
+Replacing: (${uuid:group_setting_id:61}) with (3b74c55b-6048-40be-a1bc-9d691c2d987a)
+Replacing: (${uuid:group_setting_id:38}) with (feda4eab-6b64-44aa-8ebf-c8e7c04bf711)
+Replacing: (${uuid:group_setting_id:1011}) with (4df7bb1c-470c-46cc-bf12-101d810c6b33)
+Replacing: (${uuid:group_setting_id:30}) with (0ff856dc-3fcb-47dd-8082-d262ae3f3605)
+Replacing: (${uuid:group_setting_id:1006}) with (fec2a0d6-bce2-4a6a-b521-d73feaa4adda)
+Replacing: (${uuid:group_setting_id:59}) with (5234d5a8-413a-4732-ba2a-109722435a07)
+Replacing: (${uuid:group_setting_id:54}) with (5b0ff61f-ab29-496e-a9be-40eda877ce4b)
+Replacing: (${uuid:group_setting_id:1020}) with (e6ea7a86-5518-44c6-9a53-4459cdb13fbe)
+Replacing: (${uuid:group_setting_id:2005}) with (853d489f-81d4-47c6-aeca-aa0677b828e7)
+Replacing: (${uuid:group_setting_id:5}) with (d8a27c20-9bbf-4a9d-8851-bae427dd5490)
+Replacing: (${uuid:group_setting_id:1010}) with (cd62f8c1-c375-4aa2-9784-640e0c0c17b7)
+Replacing: (${uuid:group_setting_id:60}) with (bb061765-1fff-4405-8ba2-d120e31d2c67)
+Replacing: (${uuid:group_setting_id:11}) with (9d5c6602-65a9-4d5e-aaf2-883f8d5812c6)
+Replacing: (${uuid:group_setting_id:1012}) with (bb0eec4e-6f62-47f9-a709-10471a20d92d)
+Replacing: (${uuid:group_setting_id:1028}) with (1d3c905a-c148-4070-ade0-69bfc50b9c50)
+Replacing: (${uuid:group_setting_id:42}) with (93a42eac-2537-4257-afdd-7df0d860763d)
+Replacing: (${uuid:group_setting_id:28}) with (974aa8f8-f10d-4d1f-a294-303a027d9ed2)
+Replacing: (${uuid:group_setting_id:21}) with (d99b5c93-b90e-4a4d-a193-8909caf595a6)
+Replacing: (${uuid:group_setting_id:1032}) with (25f6e5cd-31c4-48fb-bf3e-8eaed489db4c)
+Replacing: (${uuid:group_setting_id:1021}) with (c13605bf-ad71-462c-9a82-f40f88735225)
+Replacing: (${uuid:group_setting_id:1031}) with (c38842f9-2a08-49c8-a6a9-ba598a8d6d5a)
+Replacing: (${uuid:group_setting_id:1013}) with (213e56b8-aed2-4e0a-b2be-19a00d08c220)
+Replacing: (${uuid:group_setting_id:1055}) with (5603e42a-816d-42d6-bedb-9797a334780c)
+Replacing: (${uuid:group_setting_id:1002}) with (9f88090d-a3ae-4f61-8d98-541dc5d135fd)
+Replacing: (${uuid:group_setting_id:15}) with (78b66877-31c8-4002-8777-4e06985ac71a)
+Replacing: (${uuid:group_setting_id:10}) with (ff5b43b9-a1d6-4f8d-87a4-bea4d7aa6cf0)
+Replacing: (${uuid:group_setting_id:52}) with (7e435386-fd86-42d3-bd88-b6a98369c1a3)
+Replacing: (${uuid:group_setting_id:18}) with (c6c84102-e589-4f31-b2c5-bef67a96964b)
+Replacing: (${uuid:group_setting_id:1029}) with (235c8155-9dae-4a24-8945-83febaff309f)
+Replacing: (${uuid:group_setting_id:2006}) with (e5ba8b10-7ffa-4a85-83cd-26c73d05a6f8)
+Replacing: (${uuid:group_setting_id:1008}) with (e1260637-b7c6-4d2a-bf58-7e8177b99a5b)
+Replacing: (${uuid:group_setting_id:58}) with (8a54e98e-2dd7-45b1-a724-7f36103bfb6a)
+Replacing: (${uuid:group_setting_id:2}) with (4047865e-dad0-40c2-b1f8-65f86a591679)
+Replacing: (${uuid:group_setting_id:51}) with (905871b8-1eed-4d65-b050-27adb9f35f2b)
+Replacing: (${uuid:group_setting_id:43}) with (b8d3e100-c338-4a73-9bbe-7f6308c9e102)
+Replacing: (${uuid:group_setting_id:62}) with (9f9daaf3-1461-435f-b7ee-d1c8fd68a7fb)
+Replacing: (${uuid:group_setting_id:64}) with (748fd1b7-ab62-4df0-8386-8075735c7c32)
+Replacing: (${uuid:group_setting_id:33}) with (e83c1a79-67bf-41ac-8d23-85070d9271e0)
+Replacing: (${uuid:group_setting_id:56}) with (c613d5fe-5a82-4499-a249-63aff6aa4626)
+Replacing: (${uuid:group_setting_id:1022}) with (52c063b3-5575-4e68-ab5c-f0897a6e58e0)
+Replacing: (${uuid:group_permission_id:0002}) with (e2fabed2-7947-46e1-be77-68311234da3a)
+Replacing: (${uuid:group_setting_id:12}) with (bf58823d-55ff-44b0-ac1a-45347a17bfdd)
+Replacing: (${uuid:group_permission_id:0001}) with (2325d45f-73a1-44da-a743-72247a15dfd4)
+Replacing: (${uuid:group_setting_id:41}) with (af85abb2-8220-4bbb-90ea-ef81947e892e)
+Replacing: (${uuid:group_setting_id:24}) with (c73a76a1-0b88-442b-a929-f0f5788e3cfc)
+Replacing: (${uuid:group_setting_id:1019}) with (578640ec-4cef-42a2-86b3-a1a2f9b86d20)
+Replacing: (${uuid:group_setting_id:37}) with (dc045efb-f128-4b78-8847-3b0f3efd43d6)
+Replacing: (${uuid:group_setting_id:1017}) with (5af90e9f-35fd-4773-a68f-22b2daff3784)
+Replacing: (${uuid:group_setting_id:55}) with (fea05b9e-bf03-4bea-9b1e-37da82e22497)
+Replacing: (${uuid:group_setting_id:35}) with (7f8678d4-d95b-405e-960d-023f74a0a774)
+Replacing: (${uuid:group_setting_id:6}) with (eb65c003-d235-413a-8d28-f7daa84f8433)
+Replacing: (${uuid:group_setting_id:1033}) with (14b892d4-c5fa-4e93-b633-a220e52b0e70)
+Replacing: (${uuid:group_setting_id:9}) with (20bbe335-5542-4d50-8b22-81aa4564591b)
+Replacing: (${uuid:group_setting_id:1060}) with (fe3bb02c-ab09-480f-be9f-74d440b62f18)
+Replacing: (${uuid:group_setting_id:32}) with (c72c3ba7-74d2-4e8c-9c31-02599ace6582)
+Replacing: (${uuid:group_setting_id:4}) with (e903aca0-3f29-45f8-8987-a893f8f51a30)
+Replacing: (${uuid:group_setting_id:53}) with (fdc2c329-34eb-407e-a510-9ed43b9e6ae0)
+Replacing: (${uuid:group_setting_id:63}) with (a501c2ca-ee1a-464e-ac02-c6e5e7989491)
+Replacing: (${uuid:group_id:2}) with (9f0f4824-9719-4082-b3c3-783f0af968e4)
+2026-05-26 08:41:11,121 [INFO] root: Complete
+Replacing: (${uuid:group_setting_id:65}) with (ff1b9ca9-1db6-4f05-925e-f549e0a068c0)
+Replacing: (${uuid:group_setting_id:1001}) with (15f9c6b8-a92f-4a5c-b658-3ecce560c78f)
+Replacing: (${uuid:group_setting_id:7}) with (f1f94d83-13bf-400e-b550-e4e26e1a9a0e)
+Replacing: (${uuid:group_setting_id:27}) with (164f461f-2514-4862-8c20-f5c1292acd84)
+Replacing: (${uuid:group_setting_id:1026}) with (f506b6c1-bac6-44dc-a731-4547b69e0bb6)
+Replacing: (${uuid:group_setting_id:20}) with (8b7ab412-7781-4707-b78f-954fa36340cf)
+Replacing: (${uuid:group_setting_id:1004}) with (f350218c-3c95-4df8-bf7b-5207b7780207)
+Replacing: (${uuid:group_setting_id:1014}) with (94d99c9a-897c-4776-bebf-ffb056e3fc28)
+Replacing: (${uuid:group_setting_id:45}) with (38ae1d10-b84c-4fe0-8944-07e07435058f)
+Replacing: (${uuid:group_setting_id:17}) with (96c268a4-76da-46e7-b113-7c58fde3633c)
+Replacing: (${uuid:group_setting_id:1009}) with (c5b10001-e851-4b76-9bce-5fdbd4673768)
+Replacing: (${uuid:group_setting_id:1024}) with (486b5c57-5ff1-413f-9e50-371d624a54a0)
+Replacing: (${uuid:group_setting_id:13}) with (c3e35690-d1cd-46ea-a1c4-590b155cfa03)
+Replacing: (${uuid:group_setting_id:16}) with (f7ad0de7-53fe-4c3d-a2be-95d4762341e6)
+Replacing: (${datetime:utcnow}) with (2026-05-26 08:41:10.936635)
+time="2026-05-26T11:41:11+03:00" level=warning msg="/opt/kasm/1.15.0/docker/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container kasm_proxy Stopping 
+ Container kasm_proxy Stopped 
+ Container kasm_guac Stopping 
+ Container kasm_agent Stopping 
+ Container kasm_api Stopping 
+ Container kasm_share Stopping 
+ Container kasm_api Stopped 
+ Container kasm_share Stopped 
+ Container kasm_redis Stopping 
+ Container kasm_agent Stopped 
+ Container kasm_manager Stopping 
+ Container kasm_guac Stopped 
+ Container kasm_redis Stopped 
+ Container kasm_manager Stopped 
+ Container kasm_db Stopping 
+ Container kasm_db Stopped 
+Database Initialization Complete
+Not seeding default Workspaces Images.
+Setting Seed file as /opt/kasm/1.15.0/conf/database/seed_data/default_agents.yaml
+time="2026-05-26T11:41:12+03:00" level=warning msg="/opt/kasm/1.15.0/docker/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container kasm_proxy Stopping 
+ Container kasm_proxy Stopped 
+ Container kasm_guac Stopping 
+ Container kasm_agent Stopping 
+ Container kasm_api Stopping 
+ Container kasm_share Stopping 
+ Container kasm_agent Stopped 
+ Container kasm_manager Stopping 
+ Container kasm_api Stopped 
+ Container kasm_share Stopped 
+ Container kasm_redis Stopping 
+ Container kasm_guac Stopped 
+ Container kasm_manager Stopped 
+ Container kasm_db Stopping 
+ Container kasm_redis Stopped 
+ Container kasm_db Stopped 
+time="2026-05-26T11:41:13+03:00" level=warning msg="/opt/kasm/1.15.0/docker/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container kasm_db Creating 
+ Container kasm_db Created 
+ Container kasm_db Starting 
+ Container kasm_db Started 
+ Container kasm_db Waiting 
+ Container kasm_db Healthy 
+time="2026-05-26T11:41:44+03:00" level=warning msg="/opt/kasm/1.15.0/docker/.conf/docker-compose-api.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container conf-kasm_api-run-9ed42d6a4148 Creating 
+ Container conf-kasm_api-run-9ed42d6a4148 Created 
+2026-05-26 08:41:45,439 [INFO] root: Performing Database Connectivity Test
+2026-05-26 08:41:45,599 [INFO] root: Complete
+time="2026-05-26T11:41:46+03:00" level=warning msg="/opt/kasm/1.15.0/docker/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container kasm_proxy Stopping 
+ Container kasm_proxy Stopped 
+ Container kasm_api Stopping 
+ Container kasm_guac Stopping 
+ Container kasm_share Stopping 
+ Container kasm_agent Stopping 
+ Container kasm_guac Stopped 
+ Container kasm_agent Stopped 
+ Container kasm_manager Stopping 
+ Container kasm_share Stopped 
+ Container kasm_redis Stopping 
+ Container kasm_api Stopped 
+ Container kasm_manager Stopped 
+ Container kasm_db Stopping 
+ Container kasm_redis Stopped 
+ Container kasm_db Stopped 
+Database Initialization Complete
+Starting Kasm Services
+Skipping Pull of Kasm Service Images
+Starting Kasm Services
+time="2026-05-26T11:41:46+03:00" level=warning msg="/opt/kasm/1.15.0/docker/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Container kasm_redis Recreate 
+ Container kasm_redis Recreated 
+ Container kasm_redis Starting 
+ Container kasm_guac Starting 
+ Container kasm_db Starting 
+ Container kasm_guac Started 
+ Container kasm_redis Started 
+ Container kasm_db Started 
+ Container kasm_api Starting 
+ Container kasm_manager Starting 
+ Container kasm_share Starting 
+ Container kasm_api Started 
+ Container kasm_manager Started 
+ Container kasm_agent Starting 
+ Container kasm_share Started 
+Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/run/desktop/mnt/host/wsl/docker-desktop-bind-mounts/Ubuntu/a19e47f26620bc9f7a6d80bffe4a6e61987613c1ad57a6d421bc87025043866a" to rootfs at "/etc/nginx/conf.d": mount src=/run/desktop/mnt/host/wsl/docker-desktop-bind-mounts/Ubuntu/a19e47f26620bc9f7a6d80bffe4a6e61987613c1ad57a6d421bc87025043866a, dst=/etc/nginx/conf.d, dstFd=/proc/thread-self/fd/11, flags=MS_BIND|MS_REC: no such file or directory
+An error has occurred please review the log at ./kasm_install_1779784826.log

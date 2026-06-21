@@ -94,7 +94,8 @@ class FalsePositiveClassifier:
 
         # API call entropy (randomness in API sequence)
         api_calls = behavior_data.get("api_calls", [])
-        api_entropy = self._calculate_entropy(api_calls)
+        api_call_strings = [call.get("api", "") if isinstance(call, dict) else call for call in api_calls]
+        api_entropy = self._calculate_entropy(api_call_strings)
         features.append(api_entropy)
 
         # Process tree depth
@@ -424,11 +425,13 @@ class FalsePositiveClassifier:
         else:
             eval_metric = None
 
+        if eval_set:
+            self.model.set_params(early_stopping_rounds=10)
+
         self.model.fit(
             X, y,
             eval_set=eval_metric,
-            verbose=True,
-            early_stopping_rounds=10 if eval_set else None
+            verbose=True
         )
 
         self.is_trained = True

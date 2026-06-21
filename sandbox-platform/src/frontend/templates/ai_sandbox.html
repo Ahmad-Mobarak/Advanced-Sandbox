@@ -1,117 +1,183 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Agent Sandbox - Sandbox Platform</title>
-    <style>
-        :root { --bg-primary: #1a1a2e; --bg-secondary: #16213e; --bg-card: #0f3460; --text-primary: #eee; --text-secondary: #aaa; --accent: #e94560; --success: #4ade80; --warning: #fbbf24; --danger: #ef4444; --info: #3b82f6; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
-        .navbar { background: var(--bg-secondary); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg-card); }
-        .navbar h1 { font-size: 1.5rem; color: var(--accent); }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; margin-left: 1.5rem; transition: color 0.3s; }
-        .nav-links a:hover { color: var(--text-primary); }
-        .nav-links a.active { color: var(--accent); font-weight: 600; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .header h2 { font-size: 1.8rem; }
-        .card { background: var(--bg-card); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .card-title { font-size: 1.1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--bg-secondary); }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid var(--bg-secondary); }
-        th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; }
-        tr:hover { background: var(--bg-secondary); }
-        .status-badge { padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
-        .status-success { background: var(--success); color: #000; }
-        .status-error { background: var(--danger); color: #fff; }
-        .status-timeout { background: var(--warning); color: #000; }
-        .details-pre { background: #0b1a30; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.85rem; overflow-x: auto; color: #a5b4fc; }
-        .empty-state { text-align: center; padding: 3rem; color: var(--text-secondary); }
-        .gvisor-badge { background: #4a148c; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 0.5rem; }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <h1>🛡️ Sandbox Platform</h1>
-        <div class="nav-links">
-            <a href="/">Dashboard</a>
-            <a href="/samples">Samples</a>
-            <a href="/iocs">IOCs</a>
-            <a href="/mitre-attack">MITRE ATT&CK</a>
-            <a href="/ai-sandbox" class="active">AI Sandbox</a>
-            <a href="/isolation">Isolation</a>
-            <a href="/advanced">Advanced</a>
-        </div>
-    </nav>
+{% extends "_base.html" %}
 
-    <div class="container">
-        <div class="header">
-            <div>
-                <h2>🤖 AI Agent Sandbox Executions</h2>
-                <p style="color: var(--text-secondary); margin-top: 0.5rem;">
-                    Isolated ephemeral environments using E2B and gVisor <span class="gvisor-badge">runsc</span>
-                </p>
-            </div>
-        </div>
+{% block title %}AI Agent Sandbox - Sandbox Platform{% endblock %}
 
-        <div class="card" style="margin-bottom: 1.5rem;">
-            <div class="card-title">Execute Python Code</div>
-            <textarea id="aiCode" rows="6" placeholder="print('Hello World')" style="width: 100%; background: var(--bg-primary); padding: 1rem; border-radius: 6px; color: var(--text-primary); border: 1px solid var(--bg-secondary); font-family: monospace; resize: vertical;"></textarea>
-            <div style="margin-top: 1rem; display: flex; align-items: center; gap: 1rem;">
-                <button class="btn" id="executeBtn" onclick="executeCode()" style="background: var(--info); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; transition: background 0.3s; font-size: 0.9rem;">Execute in Sandbox</button>
-                <span id="executeStatus" style="font-size: 0.9rem;"></span>
-            </div>
-            <pre id="executeOutput" style="display: none; margin-top: 1rem; background: #000; padding: 1rem; border-radius: 6px; color: #4ade80; font-family: monospace;"></pre>
-        </div>
+{% block extra_head %}
+<!-- CodeMirror Dracula Theme CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+<style>
+    .CodeMirror {
+        height: 250px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
 
+{% block breadcrumbs %}
+<span class="breadcrumb-current">AI Agent Sandbox</span>
+{% endblock %}
+
+{% block content %}
+<!-- Active Page Helper -->
+{% set active_page = "ai-sandbox" %}
+
+<!-- Phase 6: Unified SOC Header -->
+<div class="soc-header" style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(217, 70, 239, 0.3); padding-bottom: 1rem; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title" style="font-size: 2rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); text-shadow: 0 0 10px rgba(217, 70, 239, 0.5);">AI Agent Execution Sandbox</h1>
+        <p class="page-subtitle" style="font-family: 'JetBrains Mono'; font-size: 0.85rem; color: var(--text-secondary);">MICRO-VM RUNTIME ENVIRONMENT: ISOLATED</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span class="badge badge-warning" style="font-family: 'JetBrains Mono'; padding: 0.4rem 0.8rem; animation: pulseGlowWarn 2s infinite;"><i class="fa-solid fa-lock" style="margin-right: 0.4rem;"></i> CONTAINMENT ACTIVE</span>
+    </div>
+</div>
+
+<style>
+    @keyframes pulseGlowWarn {
+        0% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); }
+        50% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.6); }
+        100% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); }
+    }
+    
+    .radar-sweep {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: rgba(16, 185, 129, 0.5);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.8), 0 5px 20px rgba(16, 185, 129, 0.4);
+        animation: radarScan 3s linear infinite;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    @keyframes radarScan {
+        0% { top: 0; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 100%; opacity: 0; }
+    }
+</style>
+
+<div style="display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-bottom: 2rem;" class="ai-sandbox-responsive">
+    <!-- Left Column: Code Editor & Execution Panel -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <div class="card">
-            <div class="card-title">Recent Executions ({{ executions|length }})</div>
-            {% if executions %}
-            <table>
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-code" style="color: var(--primary);"></i> Secure Code Detonation Shell</h3>
+                <span class="badge badge-queued">Python 3.10</span>
+            </div>
+            <div class="card-body">
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; margin-bottom: 1rem;">
+                    <textarea id="aiCode"># Ephemeral agent sandbox environment
+import os
+import sys
+
+print("Hello from hardened E2B MicroVM container!")
+print(f"System architecture: {sys.platform}")
+print(f"Kernel containment: gVisor active (uid: {os.getuid()})")
+</textarea>
+                </div>
+                
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <button class="btn btn-primary" id="executeBtn" onclick="executeCode()">
+                        <i class="fa-solid fa-play"></i>
+                        <span id="btnText">Execute in Sandbox</span>
+                    </button>
+                    <span id="executeStatus" style="font-size: 0.85rem; font-weight: 600;"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Terminal Output Screen -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-terminal" style="color: var(--success);"></i> Live Sandbox Terminal</h3>
+                <button class="btn btn-secondary btn-sm" onclick="clearTerminal()">
+                    <i class="fa-solid fa-eraser"></i> Clear
+                </button>
+            </div>
+            <div class="card-body hologram-terminal" style="background: #02040a; flex-grow: 1; display: flex; flex-direction: column; min-height: 250px; padding: 1rem; position: relative; border-radius: 0 0 12px 12px; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div class="radar-sweep"></div>
+                <div id="terminal-placeholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-muted); font-size: 0.85rem; text-align: center; pointer-events: none; z-index: 5;">
+                    <i class="fa-solid fa-microchip" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                    <p>Detonate code to output live microVM logs.</p>
+                </div>
+                <pre id="executeOutput" class="mono" style="display: none; white-space: pre-wrap; word-break: break-all; color: var(--success); font-size: 0.85rem; flex-grow: 1; overflow-y: auto; max-height: 280px; position: relative; z-index: 5; text-shadow: 0 0 5px rgba(16,185,129,0.5);"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Log Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Historic Detonation Runs</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if executions %}
+        <div class="data-table-container">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Execution ID</th>
-                        <th>Language</th>
+                        <th>Lang</th>
                         <th>Status</th>
-                        <th>Runtime (ms)</th>
-                        <th>Time</th>
-                        <th>Details</th>
+                        <th>Runtime</th>
+                        <th>Triggered Time</th>
+                        <th>Action Details</th>
+                        {% if current_user.get('role') == 'admin' or current_user.get('username') == 'admin' %}<th></th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for exec in executions %}
                     {% set details = exec.details|fromjson %}
-                    <tr>
-                        <td style="font-family: monospace; font-size: 0.85rem;">{{ details.execution_id[:8] }}...</td>
-                        <td>{{ details.language|upper }}</td>
+                    <tr id="audit-{{ exec.id }}">
+                        <td class="mono" style="font-weight: bold; color: var(--primary);">{{ details.execution_id[:8] }}...</td>
+                        <td><span class="badge badge-unknown" style="font-size: 0.7rem;">{{ details.language|upper }}</span></td>
                         <td>
-                            <span class="status-badge status-{{ details.status }}">
+                            <span class="badge badge-{{ 'completed' if details.status == 'success' else ('pending' if details.status == 'timeout' else 'failed') }}">
                                 {{ details.status }}
                             </span>
                         </td>
-                        <td>{{ details.execution_time_ms }} ms</td>
+                        <td class="mono">{{ details.execution_time_ms }} ms</td>
                         <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ exec.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                         <td>
-                            <button onclick="toggleDetails('details-{{ exec.id }}')" style="background: var(--info); color: white; border: none; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">View</button>
+                            <button class="btn btn-secondary btn-sm" onclick="toggleDetails('details-{{ exec.id }}')">
+                                <i class="fa-solid fa-eye"></i> View Telemetry
+                            </button>
                         </td>
+                        {% if current_user.get('role') == 'admin' or current_user.get('username') == 'admin' %}
+                        <td>
+                            <button class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; border-color: transparent;" onclick="archiveAudit('{{ exec.id }}')" title="Archive">
+                                <i class="fa-solid fa-box-archive" style="color: var(--text-secondary);"></i>
+                            </button>
+                        </td>
+                        {% endif %}
                     </tr>
-                    <tr id="details-{{ exec.id }}" style="display: none; background: rgba(0,0,0,0.2);">
-                        <td colspan="6" style="padding: 1rem;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <tr id="details-{{ exec.id }}" style="display: none; background: rgba(9, 13, 22, 0.6);">
+                        <td colspan="6" style="padding: 1.5rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="telemetry-grid-responsive">
                                 <div>
-                                    <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">Execution Details (JSON)</h4>
-                                    <pre class="details-pre">{{ details | tojson(indent=2) }}</pre>
+                                    <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;"><i class="fa-solid fa-code"></i> Execution Details (JSON)</h4>
+                                    <pre class="details-pre" style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; font-size: 0.75rem; border: 1px solid var(--border-color); overflow-x: auto; max-height: 250px;">{{ details | tojson(indent=2) }}</pre>
                                 </div>
                                 <div>
-                                    <h4 style="color: var(--text-secondary); margin-bottom: 0.5rem;">Network Egress Policy</h4>
-                                    <pre class="details-pre" style="color: #6ee7b7;">{
-  "access_level": "restricted",
-  "default_action": "DROP",
+                                    <h4 style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;"><i class="fa-solid fa-shield-halved"></i> Sandboxed Network Rule Policy</h4>
+                                    <pre class="details-pre" style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; font-size: 0.75rem; border: 1px solid var(--border-color); color: var(--success); overflow-x: auto; max-height: 250px;">{
+  "sandbox_egress_level": "BLOCK_ALL",
+  "gateway_policy": "gvisor-runsc-restrict",
   "rules": [
-    {"type": "egress", "action": "ACCEPT", "port": 53},
-    {"type": "egress", "action": "DROP", "destination": "10.0.0.0/8"}
-  ]
+    {"port": 53, "protocol": "UDP", "action": "ACCEPT_LOCAL"},
+    {"port": "any", "protocol": "TCP", "action": "DROP_FORWARD"}
+  ],
+  "mitigation": "E2B virtual isolated namespace container"
 }</pre>
                                 </div>
                             </div>
@@ -120,82 +186,166 @@
                     {% endfor %}
                 </tbody>
             </table>
-            {% else %}
-            <div class="empty-state">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🧪</div>
-                <h3>No agent executions yet.</h3>
-                <p style="margin-top: 0.5rem;">Use the POST /api/v1/ai-sandbox/execute endpoint to submit code.</p>
-            </div>
-            {% endif %}
         </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-box-open"></i></div>
+            <div class="empty-state-title">No previous agent detonations</div>
+            <div class="empty-state-desc">You haven't run any custom python containers inside the E2B system yet. Submit code above to begin.</div>
+        </div>
+        {% endif %}
     </div>
+</div>
 
-    <script>
-        function toggleDetails(id) {
-            const el = document.getElementById(id);
-            if (el.style.display === 'none') {
-                el.style.display = 'table-row';
-            } else {
-                el.style.display = 'none';
-            }
+<style>
+    @media (max-width: 900px) {
+        .ai-sandbox-responsive {
+            grid-template-columns: 1fr !important;
+        }
+        .telemetry-grid-responsive {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- CodeMirror JS dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+<script>
+    let codeEditor = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize CodeMirror Dracula Editor
+        const textarea = document.getElementById('aiCode');
+        if (textarea) {
+            codeEditor = CodeMirror.fromTextArea(textarea, {
+                lineNumbers: true,
+                mode: 'python',
+                theme: 'dracula',
+                tabSize: 4,
+                indentUnit: 4,
+                matchBrackets: true,
+                autoCloseBrackets: true
+            });
+        }
+    });
+
+    // Toggle execution details helper
+    function toggleDetails(id) {
+        const el = document.getElementById(id);
+        if (el.style.display === 'none') {
+            el.style.display = 'table-row';
+        } else {
+            el.style.display = 'none';
+        }
+    }
+
+    // Clear Terminal Output helper
+    function clearTerminal() {
+        const output = document.getElementById('executeOutput');
+        const placeholder = document.getElementById('terminal-placeholder');
+        output.innerText = '';
+        output.style.display = 'none';
+        placeholder.style.display = 'block';
+    }
+
+    // Execute Sandbox Payload Handler
+    async function executeCode() {
+        const codeValue = codeEditor ? codeEditor.getValue() : document.getElementById('aiCode').value;
+        if (!codeValue.trim()) {
+            showToast("Cannot execute empty payload", "warning");
+            return;
         }
 
-        async function executeCode() {
-            const codeInput = document.getElementById('aiCode').value;
-            if (!codeInput.trim()) return;
+        const btn = document.getElementById('executeBtn');
+        const btnText = document.getElementById('btnText');
+        const status = document.getElementById('executeStatus');
+        const output = document.getElementById('executeOutput');
+        const placeholder = document.getElementById('terminal-placeholder');
 
-            const btn = document.getElementById('executeBtn');
-            const status = document.getElementById('executeStatus');
-            const output = document.getElementById('executeOutput');
+        btn.disabled = true;
+        btnText.innerText = 'Spawning VM...';
+        status.innerText = 'Creating isolated guest environment...';
+        status.style.color = 'var(--text-secondary)';
+        
+        output.style.display = 'none';
+        placeholder.style.display = 'none';
 
-            btn.disabled = true;
-            btn.innerText = 'Executing...';
-            status.innerText = '';
-            output.style.display = 'none';
+        try {
+            const response = await fetch('/api/v1/ai-sandbox/execute', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: codeValue,
+                    language: 'python',
+                    timeout_seconds: 10,
+                    network_access: 'none',
+                    allowed_domains: [],
+                    dependencies: []
+                })
+            });
 
-            try {
-                const response = await fetch('/api/v1/ai-sandbox/execute', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer {{ api_key }}',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        code: codeInput,
-                        language: 'python',
-                        timeout_seconds: 10,
-                        network_access: 'none',
-                        allowed_domains: [],
-                        dependencies: []
-                    })
-                });
-
-                const data = await response.json();
+            const data = await response.json();
+            
+            if (response.ok) {
+                status.style.color = 'var(--success)';
+                status.innerText = `Detonated in ${data.execution_time_ms}ms`;
+                output.style.display = 'block';
                 
-                if (response.ok) {
-                    status.style.color = 'var(--success)';
-                    status.innerText = `Success (${data.execution_time_ms}ms)`;
-                    output.style.display = 'block';
-                    output.innerText = data.stdout || '(No output)';
-                    if (data.stderr) {
-                        output.innerText += '\n\nSTDERR:\n' + data.stderr;
-                        output.style.color = 'var(--warning)';
-                    } else {
-                        output.style.color = 'var(--success)';
-                    }
-                    setTimeout(() => window.location.reload(), 2000);
+                let outStr = data.stdout || '(Detonation returned no standard output logs)';
+                if (data.stderr) {
+                    outStr += '\n\n[ANOMALOUS STDERR LOGS]:\n' + data.stderr;
+                    output.style.color = 'var(--warning)';
                 } else {
-                    status.style.color = 'var(--danger)';
-                    status.innerText = 'Error: ' + (data.detail || data.message || 'Execution failed');
+                    output.style.color = 'var(--success)';
                 }
-            } catch (err) {
+                output.innerText = outStr;
+                showToast("Sandbox execution completed successfully", "success");
+
+                // Auto reload to fetch latest execution rows
+                setTimeout(() => window.location.reload(), 2500);
+            } else {
                 status.style.color = 'var(--danger)';
-                status.innerText = 'Error: ' + err.message;
-            } finally {
-                btn.disabled = false;
-                btn.innerText = 'Execute in Sandbox';
+                const errMsg = data.detail || data.message || 'Detonation VM failed';
+                status.innerText = 'Detonation Error';
+                output.style.display = 'block';
+                output.style.color = 'var(--danger)';
+                output.innerText = `[DETONATION ERROR]: ${errMsg}`;
+                showToast("Execution Sandbox failed: " + errMsg, "danger");
             }
+        } catch (err) {
+            status.style.color = 'var(--danger)';
+            status.innerText = 'Connection Error';
+            output.style.display = 'block';
+            output.style.color = 'var(--danger)';
+            output.innerText = `[CONNECTION ERROR]: ${err.message}`;
+            showToast("Failed to connect to agent api: " + err.message, "danger");
+        } finally {
+            btn.disabled = false;
+            btnText.innerText = 'Execute in Sandbox';
         }
-    </script>
-</body>
-</html>
+    }
+
+    async function archiveAudit(auditId) {
+        if (!confirm("Are you sure you want to archive this execution log entry?")) return;
+        try {
+            const res = await fetch(`/api/v1/admin/audit/${auditId}/archive`, { method: 'POST' });
+            if (res.ok) {
+                document.getElementById(`audit-${auditId}`).remove();
+                const detailsRow = document.getElementById(`details-${auditId}`);
+                if (detailsRow) detailsRow.remove();
+                showToast("Record archived successfully", "success");
+            } else {
+                showToast("Failed to archive record", "danger");
+            }
+        } catch (e) {
+            showToast("Network error", "danger");
+        }
+    }
+</script>
+{% endblock %}

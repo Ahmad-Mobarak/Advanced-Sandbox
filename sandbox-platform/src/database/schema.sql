@@ -17,6 +17,7 @@ CREATE TABLE users (
 
     -- Authentication
     password_hash TEXT,
+    must_change_password BOOLEAN DEFAULT FALSE,
     mfa_enabled BOOLEAN DEFAULT FALSE,
     mfa_secret TEXT,
 
@@ -333,6 +334,7 @@ CREATE TABLE audit_log (
     details JSONB DEFAULT '{}'::jsonb,
     old_values JSONB,
     new_values JSONB,
+    archived BOOLEAN DEFAULT FALSE,
 
     -- Result
     status TEXT CHECK (status IN ('success', 'failure', 'partial')),
@@ -706,11 +708,13 @@ AND b.sigma_rule_id IS NOT NULL;
 -- INITIAL DATA
 -- ============================================================================
 
--- Default admin user (password: change-me-immediately)
-INSERT INTO users (username, email, password_hash, role, permissions) VALUES
-('admin', 'admin@localhost', crypt('change-me-immediately', gen_salt('bf')), 'admin',
+-- Default users (password: 123123123123)
+INSERT INTO users (username, email, password_hash, role, permissions, must_change_password) VALUES
+('admin', 'admin@localhost', crypt('123123123123', gen_salt('bf')), 'admin',
  '["samples:read", "samples:write", "samples:delete", "analysis:read", "analysis:write",
-   "users:read", "users:write", "config:read", "config:write", "audit:read"]'::jsonb);
+   "users:read", "users:write", "config:read", "config:write", "audit:read"]'::jsonb, TRUE),
+('user', 'user@localhost', crypt('123123123123', gen_salt('bf')), 'analyst',
+ '["samples:read", "samples:write", "analysis:read", "analysis:write", "audit:read"]'::jsonb, TRUE);
 
 -- Default sandbox types
 INSERT INTO sandboxes (name, sandbox_type, os_type, os_version, architecture, capabilities, status) VALUES

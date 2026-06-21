@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sandbox Platform{% endblock %}</title>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Base Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css?v=1.1">
+    <!-- Three.js (Phase 2) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <!-- D3.js (Phase 5) -->
+    <script src="https://d3js.org/d3.v7.min.js" defer></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Collapsible Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Sandbox Platform</span>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="/" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/samples" class="sidebar-link {% if active_page == 'samples' %}active{% endif %}">
+                        <i class="fa-solid fa-box-open"></i>
+                        <span>Samples</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/iocs" class="sidebar-link {% if active_page == 'iocs' %}active{% endif %}">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <span>IOCs</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/mitre-attack" class="sidebar-link {% if active_page == 'mitre-attack' %}active{% endif %}">
+                        <i class="fa-solid fa-skull-crossbones"></i>
+                        <span>MITRE ATT&CK</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/ai-sandbox" class="sidebar-link {% if active_page == 'ai-sandbox' %}active{% endif %}">
+                        <i class="fa-solid fa-robot"></i>
+                        <span>AI Sandbox</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/isolation" class="sidebar-link {% if active_page == 'isolation' %}active{% endif %}">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span>Isolation</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/ml-feedback" class="sidebar-link {% if active_page == 'ml-feedback' %}active{% endif %}">
+                        <i class="fa-solid fa-brain"></i>
+                        <span>ML Feedback</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="/advanced" class="sidebar-link {% if active_page == 'advanced' %}active{% endif %}">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Advanced</span>
+                    </a>
+                </li>
+                {% if current_user and current_user.role == 'admin' %}
+                <li class="sidebar-item">
+                    <a href="/admin" class="sidebar-link {% if active_page == 'admin' %}active{% endif %}">
+                        <i class="fa-solid fa-gears"></i>
+                        <span>Admin Panel</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- Sidebar User / Profile Footer -->
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="user-avatar">
+                        {{ (current_user.username[:2] if current_user else 'US') | upper }}
+                    </div>
+                    <div class="user-meta">
+                        <span class="user-name">{{ (current_user.username if current_user else 'Analyst') }}</span>
+                        <span class="user-role">{{ (current_user.role if current_user else 'user') | capitalize }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="logout-btn" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper -->
+        <main class="main-wrapper">
+            <!-- Phase 6: Live Threat Ticker (Mission Status Layer) -->
+            <div class="threat-ticker" id="globalThreatTicker">
+                <div class="ticker-track">
+                    <span class="ticker-item severity-critical"><i class="fa-solid fa-triangle-exclamation"></i> <strong>CRITICAL:</strong> APT29 Lateral Movement Detected (T1021) in DMZ-04</span>
+                    <span class="ticker-item severity-high"><i class="fa-solid fa-radiation"></i> <strong>HIGH:</strong> Suspicious encoded PowerShell execution blocked on Endpoint-Alpha</span>
+                    <span class="ticker-item severity-medium"><i class="fa-solid fa-shield-virus"></i> <strong>MEDIUM:</strong> Multiple failed SSH logins from 185.153.196.x to Honeypot-Node-2</span>
+                    <span class="ticker-item severity-info"><i class="fa-solid fa-satellite-dish"></i> <strong>INFO:</strong> Daily IOC signature update completed. 1,402 new indicators ingested.</span>
+                    <span class="ticker-item severity-critical"><i class="fa-solid fa-triangle-exclamation"></i> <strong>CRITICAL:</strong> Zero-day vulnerability scanning detected from external IP range (T1595)</span>
+                </div>
+            </div>
+
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <!-- Header Breadcrumb dynamically built per page -->
+                    <nav class="breadcrumb">
+                        <a href="/">Platform</a>
+                        <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+                        {% block breadcrumbs %}
+                        <span class="breadcrumb-current">Dashboard</span>
+                        {% endblock %}
+                    </nav>
+                </div>
+                <!-- Extra top header content if needed -->
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    {% block header_actions %}{% endblock %}
+                    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cmdPalette').classList.add('open'); document.getElementById('cmdInput').focus();" title="Command Palette" style="font-size: 0.8rem; gap: 0.4rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-search"></i>
+                        <kbd style="background: var(--bg-tertiary); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.7rem; border: 1px solid var(--border-color); font-family: inherit;">Ctrl+K</kbd>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-container">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Collapsible Sidebar Mobile Handler
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (menuToggle && sidebar) {
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('mobile-open');
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!sidebar.contains(e.target) && e.target !== menuToggle) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            });
+        }
+
+        // Global Toast Notification Utility
+        window.showToast = function(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let iconClass = 'fa-info-circle';
+            if (type === 'success') iconClass = 'fa-circle-check';
+            if (type === 'danger') iconClass = 'fa-circle-exclamation';
+            if (type === 'warning') iconClass = 'fa-triangle-exclamation';
+
+            toast.innerHTML = `
+                <span class="toast-icon"><i class="fa-solid ${iconClass}"></i></span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) reverse forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        };
+    </script>
+    {% block extra_scripts %}{% endblock %}
+    <!-- Phase 2: Three.js Background -->
+    <script src="/static/three_background.js" defer></script>
+    <!-- Phase 4: Advanced Interactions -->
+    <script src="/static/interactions.js?v=1.1" defer></script>
+</body>
+</html>

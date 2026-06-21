@@ -1,5 +1,5 @@
 # docker-compose.dev.yml
-# Minimal development setup: PostgreSQL + Platform
+# Full development setup: PostgreSQL + Redis + Platform + Worker
 # Usage: docker compose -f docker-compose.dev.yml up --build
 
 services:
@@ -16,10 +16,24 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sandbox -d sandbox_db"]
+      test: [ "CMD-SHELL", "pg_isready -U sandbox -d sandbox_db" ]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: sandbox-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   platform:
     build:
@@ -30,16 +44,53 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://sandbox:sandbox_dev_password_change_me@postgres:5432/sandbox_db
-      PORT: "8000"
+      REDIS_URL: redis://redis:6379
+      PORT: "8080"
     ports:
-      - "8000:8000"
+      - "8080:8080"
     volumes:
       - ./src:/app/src
+      - ./models:/app/models
       - sample_storage:/storage/samples
+      - telemetry_storage:/storage/telemetry
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sandbox-worker
+    command: [ "python", "-m", "src.worker.main" ]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://sandbox:sandbox_dev_password_change_me@postgres:5432/sandbox_db
+      REDIS_URL: redis://redis:6379
+      STORAGE_PATH: /storage/samples
+      EBPF_TELEMETRY_DIR: /storage/telemetry
+    volumes:
+      - ./src:/app/src
+      - ./models:/app/models
+      - sample_storage:/storage/samples
+      - telemetry_storage:/storage/telemetry
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  redis_data:
   sample_storage:
+  telemetry_storage:

@@ -1,351 +1,521 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Isolation - Sandbox Platform</title>
-    <style>
-        :root { --bg-primary: #1a1a2e; --bg-secondary: #16213e; --bg-card: #0f3460; --text-primary: #eee; --text-secondary: #aaa; --accent: #e94560; --success: #4ade80; --warning: #fbbf24; --danger: #ef4444; --info: #3b82f6; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
-        .navbar { background: var(--bg-secondary); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg-card); }
-        .navbar h1 { font-size: 1.5rem; color: var(--accent); }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; margin-left: 1.5rem; transition: color 0.3s; }
-        .nav-links a:hover { color: var(--text-primary); }
-        .nav-links a.active { color: var(--accent); font-weight: 600; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 2rem; }
-        .header h2 { font-size: 1.8rem; margin-bottom: 1rem; }
-        
-        /* View Switcher */
-        .switcher { background: var(--bg-secondary); padding: 0.4rem; border-radius: 50px; display: flex; gap: 0.5rem; margin-bottom: 2rem; border: 1px solid var(--bg-card); }
-        .switch-btn { padding: 0.6rem 1.5rem; border: none; border-radius: 50px; background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: all 0.3s; }
-        .switch-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3); }
+{% extends "_base.html" %}
 
-        .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+{% block title %}Isolation & Sanitization - Sandbox Platform{% endblock %}
 
-        .card { background: var(--bg-card); border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; }
-        .card-title { font-size: 1.4rem; margin-bottom: 1.5rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--bg-secondary); display: flex; justify-content: space-between; align-items: center;}
-        
-        .form-group { margin-bottom: 1.5rem; }
-        .form-group label { display: block; margin-bottom: 0.8rem; color: var(--text-secondary); font-size: 1rem; }
-        .form-input { width: 100%; padding: 1rem; background: var(--bg-secondary); border: 1px solid #2a4365; border-radius: 8px; color: white; font-size: 1.1rem; }
-        .btn { padding: 1rem 2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.3s; font-size: 1.1rem;}
-        .btn-primary { background: var(--info); color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-danger { background: var(--accent); color: white; }
-        
-        .browser-container { background: #000; border-radius: 12px; border: 2px solid var(--bg-secondary); height: 70vh; min-height: 500px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; margin-top: 1rem;}
-        .browser-iframe { width: 100%; height: 100%; border: none; display: none; }
-        .browser-placeholder { color: var(--text-secondary); text-align: center; padding: 2rem; }
-        
-        .upload-area { border: 2px dashed var(--info); border-radius: 12px; padding: 5rem 2rem; text-align: center; background: rgba(59, 130, 246, 0.05); cursor: pointer; transition: all 0.3s; margin-bottom: 2rem;}
-        .upload-area:hover { background: rgba(59, 130, 246, 0.1); border-color: #60a5fa; transform: scale(1.01); }
-        .upload-icon { font-size: 4rem; margin-bottom: 1.5rem; color: var(--info); }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--bg-secondary); font-size: 0.95rem; }
-        th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
-        .status-badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
-        .status-active { background: var(--success); color: #000; }
-        .status-safe { background: var(--success); color: #000; }
-        .status-error { background: var(--danger); color: white; }
-        .status-processing { background: var(--info); color: white; }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <h1>🛡️ Sandbox Platform</h1>
-        <div class="nav-links">
-            <a href="/">Dashboard</a>
-            <a href="/samples">Samples</a>
-            <a href="/iocs">IOCs</a>
-            <a href="/mitre-attack">MITRE ATT&CK</a>
-            <a href="/ai-sandbox">AI Sandbox</a>
-            <a href="/isolation" class="active">Isolation</a>
-            <a href="/advanced">Advanced</a>
+{% block breadcrumbs %}
+<span class="breadcrumb-current">Isolation & Sanitization</span>
+{% endblock %}
+
+{% block content %}
+<!-- Active Page Helper -->
+{% set active_page = "isolation" %}
+
+<!-- Phase 6: Unified SOC Header -->
+<div class="soc-header" style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid rgba(16, 185, 129, 0.3); padding-bottom: 1rem; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title" style="font-size: 2rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--success); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);">Isolation & Sanitization Center</h1>
+        <p class="page-subtitle" style="font-family: 'JetBrains Mono'; font-size: 0.85rem; color: var(--text-secondary);">REMOTE BROWSER ISOLATION (RBI) AND CDR PIPELINE</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span class="badge badge-success" style="font-family: 'JetBrains Mono'; padding: 0.4rem 0.8rem; animation: pulseGlowSuccess 2s infinite;"><i class="fa-solid fa-shield-virus" style="margin-right: 0.4rem;"></i> ISOLATION ACTIVE</span>
+    </div>
+</div>
+
+<style>
+    @keyframes pulseGlowSuccess {
+        0% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
+        50% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.6); }
+        100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
+    }
+</style>
+
+<!-- Sliding View Switcher Navigation -->
+<div class="card" style="margin-bottom: 2rem; background: var(--bg-secondary);">
+    <div class="card-body" style="padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: center;">
+        <div style="display: inline-flex; background: var(--bg-primary); padding: 0.35rem; border-radius: 30px; border: 1px solid var(--border-color);" class="toggle-navigation">
+            <button class="btn btn-primary btn-sm nav-toggle-btn" id="toggle-rbi" onclick="switchSection('rbi')" style="border-radius: 20px; font-size: 0.85rem; padding: 0.5rem 1.25rem;">
+                <i class="fa-solid fa-window-restore"></i> Remote Browser Isolation
+            </button>
+            <button class="btn btn-ghost btn-sm nav-toggle-btn" id="toggle-sanitization" onclick="switchSection('sanitization')" style="border-radius: 20px; font-size: 0.85rem; padding: 0.5rem 1.25rem; color: var(--text-secondary);">
+                <i class="fa-solid fa-file-shield"></i> Safe Document Sanitization
+            </button>
         </div>
-    </nav>
+    </div>
+</div>
 
-    <div class="container">
-        <div class="header">
-            <h2>🔒 Security Isolation Plane</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; max-width: 600px;">
-                Safely detonation suspicious links and documents using containerized environments.
-            </p>
-            
-            <div class="switcher">
-                <button class="switch-btn active" onclick="switchView('browser')">🌐 Remote Browser</button>
-                <button class="switch-btn" onclick="switchView('sanitization')">📄 File Sanitization</button>
+<!-- Section 1: Remote Browser Isolation (Kasm) -->
+<div id="rbi-section" class="isolation-panel">
+    <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-bottom: 2rem;" class="rbi-grid-responsive">
+        <!-- RBI Control & Sandbox Launcher -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fa-solid fa-globe" style="color: var(--primary);"></i> Detonate Link in Kasm Workspace</h3>
+                </div>
+                <div class="card-body">
+                    <form onsubmit="launchBrowser(event)" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="rbiUrl">Target Website / Suspicious URL</label>
+                            <div style="display: flex; gap: 0.75rem;">
+                                <input type="text" id="rbiUrl" class="form-input" placeholder="google.com" required style="flex-grow: 1;">
+                                <button type="submit" class="btn btn-primary" id="launchBtn">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch
+                                </button>
+                            </div>
+                        </div>
+                        <div id="launchStatus" style="font-size: 0.85rem; font-weight: 600;"></div>
+                    </form>
+
+                    <!-- Kasm Session Success Container (Hidden by default) -->
+                    <div id="kasmContainer" class="container-3d" style="display: none; margin-top: 1.5rem; padding: 3rem 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background: #000000; text-align: center; box-shadow: inset 0 0 40px rgba(16, 185, 129, 0.05); transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s ease;">
+                        
+                        <div style="display: inline-flex; justify-content: center; align-items: center; width: 64px; height: 64px; background: linear-gradient(135deg, #34d399 0%, #059669 100%); border-radius: 16px; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3), inset 0 2px 0 rgba(255,255,255,0.4); margin-bottom: 1.5rem;">
+                            <i class="fa-solid fa-check" style="font-size: 2.2rem; color: #ffffff;"></i>
+                        </div>
+                        
+                        <h2 style="font-size: 1.75rem; color: #ffffff; margin: 0 0 0.5rem 0; font-weight: 700;">Session Ready</h2>
+                        <p style="font-size: 1.1rem; color: #10b981; margin: 0 0 2rem 0; font-weight: 500;">Your isolated browser is running.</p>
+                        
+                        <div style="background: #111111; border: 1px solid #222222; border-radius: 12px; padding: 1.5rem; max-width: 450px; margin: 0 auto 2.5rem auto; text-align: left;">
+                            <p style="color: #9ca3af; font-size: 0.95rem; margin: 0 0 1rem 0;">If prompted to login, use these Sandbox credentials:</p>
+                            <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
+                                <strong style="color: #d1d5db; width: 90px; font-size: 1.05rem;">Email:</strong>
+                                <span style="font-family: monospace; background: rgba(255,255,255,0.05); padding: 0.3rem 0.6rem; border-radius: 4px; color: #f3f4f6; font-size: 1.05rem;">user@kasm.local</span>
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                <strong style="color: #d1d5db; width: 90px; font-size: 1.05rem;">Password:</strong>
+                                <span style="font-family: monospace; background: rgba(255,255,255,0.05); padding: 0.3rem 0.6rem; border-radius: 4px; color: #f3f4f6; font-size: 1.05rem;">@Qwe123123</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <a id="kasmOpenTab" href="" target="_blank" class="btn btn-primary btn-lg" style="padding: 1rem 2.5rem; font-size: 1.15rem; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">
+                                Open Session in New Tab
+                            </a>
+                        </div>
+                        
+                        <div style="margin-top: 2rem;">
+                            <button class="btn btn-ghost btn-sm" onclick="closeKasmSession()" style="color: #6b7280; font-weight: 500;">
+                                <i class="fa-solid fa-xmark"></i> Terminate Session
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- RBI Section -->
-        <div id="browserView" class="view-section active">
-            <div class="card">
-                <div class="card-title">
-                    <span>Remote Browser Isolation</span>
-                    <span style="font-size: 0.9rem; background: var(--bg-secondary); padding: 0.4rem 1rem; border-radius: 50px; color: var(--text-secondary);">Powered by Kasm Workspaces</span>
-                </div>
-                
-                <div class="form-group">
-                    <label>Target URL to Investigate</label>
-                    <div style="display: flex; gap: 1rem;">
-                        <input type="text" id="urlInput" class="form-input" placeholder="https://suspicious-malware-site.com/login">
-                        <button onclick="launchBrowser()" class="btn btn-danger" style="width: auto; white-space: nowrap;">Launch Safe Browser</button>
-                    </div>
-                </div>
-
-                <div class="browser-container" id="browserContainer">
-                    <div class="browser-placeholder" id="browserPlaceholder">
-                        <div style="font-size: 3rem; margin-bottom: 1.5rem;">🖥️</div>
-                        <h3>No Active Session</h3>
-                        <p style="font-size: 0.95rem; margin-top: 0.8rem; max-width: 400px; margin-left: auto; margin-right: auto;">
-                            Enter a suspicious URL above. We will provision a fresh, isolated, and disposable browser container for you.
-                        </p>
-                    </div>
-                    <iframe id="browserIframe" class="browser-iframe"></iframe>
-                </div>
-                
-                <div style="margin-top: 2rem;">
-                    <h3 style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid var(--bg-secondary); padding-bottom: 0.5rem;">Recent Investigation Sessions</h3>
-                    {% if rbi_logs %}
-                    <table>
+        <!-- Recent RBI Sessions -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-history"></i> Recent RBI Sessions</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                {% if rbi_logs %}
+                <div class="data-table-container">
+                    <table class="data-table">
                         <thead>
                             <tr>
+                                <th>Session ID</th>
                                 <th>Target URL</th>
                                 <th>Status</th>
-                                <th>Time</th>
+                                <th>Timestamp</th>
+                                {% if current_user.role == 'admin' %}<th></th>{% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for log in rbi_logs %}
                             {% set details = log.details|fromjson %}
-                            <tr>
-                                <td style="max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: monospace;" title="{{ details.url }}">{{ details.url }}</td>
-                                <td><span class="status-badge status-{{ log.status }}">{{ log.status }}</span></td>
-                                <td style="color: var(--text-secondary);">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <tr id="audit-{{ log.id }}">
+                                <td class="mono" style="font-size: 0.8rem; font-weight: bold; color: var(--primary);">{{ (log.id|string)[:8] }}...</td>
+                                <td class="mono" style="font-size: 0.8rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ details.url or '—' }}
+                                </td>
+                                <td><span class="badge badge-{{ 'completed' if log.status == 'success' else 'failed' }}">{{ log.status }}</span></td>
+                                <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ log.timestamp.strftime('%m-%d %H:%M') }}</td>
+                                {% if current_user.role == 'admin' %}
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; border-color: transparent;" onclick="archiveAudit('{{ log.id }}')" title="Archive">
+                                        <i class="fa-solid fa-box-archive" style="color: var(--text-secondary);"></i>
+                                    </button>
+                                </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
-                    {% else %}
-                    <p style="padding: 2rem; text-align: center; color: var(--text-secondary); background: rgba(0,0,0,0.1); border-radius: 8px;">No recent sessions found.</p>
-                    {% endif %}
+                </div>
+                {% else %}
+                <div class="empty-state" style="padding: 2.5rem 1rem;">
+                    <div class="empty-state-icon"><i class="fa-solid fa-ghost"></i></div>
+                    <div class="empty-state-title">No previous RBI sessions</div>
+                    <div class="empty-state-desc">Launch a suspicious URL above to establish containerized remote sessions.</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section 2: Safe Document Sanitization (Dangerzone) -->
+<div id="sanitization-section" class="isolation-panel" style="display: none;">
+    <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem; margin-bottom: 2rem;" class="rbi-grid-responsive">
+        <!-- Dangerzone Sanitization Control -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fa-solid fa-file-shield" style="color: var(--accent);"></i> Clean Threat Vectors (Dangerzone)</h3>
+                </div>
+                <div class="card-body">
+                    <form onsubmit="sanitizeDocument(event)" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        
+                        <!-- Drag & Drop Zone -->
+                        <div class="drop-zone" id="documentDragArea" onclick="document.getElementById('sanitizeFile').click()">
+                            <div class="drop-zone-icon" style="color: var(--accent);">
+                                <i class="fa-solid fa-file-zipper"></i>
+                            </div>
+                            <div class="drop-zone-text" id="docDropText">Drag Document or Click to Browse</div>
+                            <div class="drop-zone-desc">Supports PDF, DOCX, XLSX, PPTX, JPG</div>
+                            <input type="file" id="sanitizeFile" required style="display: none;" onchange="updateDocInfo(this)">
+                        </div>
+
+                        <!-- Selected Doc info (Hidden) -->
+                        <div id="selectedDocInfo" style="display: none; background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.85rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="font-weight: 600; color: var(--text-primary);" id="docNameSpan">document.docx</span>
+                                <span style="color: var(--text-secondary);" id="docSizeSpan">350 KB</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="sanitizeBtn" style="background: var(--accent); border-color: var(--accent);">
+                            <i class="fa-solid fa-recycle"></i>
+                            <span id="sanitizeBtnText">Sanitize Document</span>
+                        </button>
+                        
+                        <div id="sanitizeStatus" style="font-size: 0.85rem; font-weight: 600;"></div>
+                    </form>
+
+                    <!-- Sanitization download block (Hidden by default) -->
+                    <div id="downloadContainer" style="display: none; margin-top: 1.5rem; background: rgba(16,185,129,0.05); border: 1px solid var(--success-border); padding: 1.25rem; border-radius: 8px; text-align: center;">
+                        <div style="color: var(--success); font-weight: bold; margin-bottom: 0.5rem;"><i class="fa-solid fa-circle-check"></i> Document Sanitized Successfully!</div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">All macros, links, and embedded scripts have been stripped out into a secure flattened PDF.</p>
+                        <a id="downloadLink" href="#" class="btn btn-primary" style="background: var(--success); border-color: var(--success);" download>
+                            <i class="fa-solid fa-download"></i> Download Safe PDF
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Sanitization Section -->
-        <div id="sanitizationView" class="view-section">
-            <div class="card">
-                <div class="card-title">
-                    <span>Document Sanitization</span>
-                    <span style="font-size: 0.9rem; background: var(--bg-secondary); padding: 0.4rem 1rem; border-radius: 50px; color: var(--text-secondary);">Powered by Dangerzone</span>
-                </div>
-                
-                <div style="display: flex; gap: 2rem; align-items: flex-start; margin-bottom: 2rem;">
-                    <div style="flex: 1;">
-                        <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6; margin-bottom: 1.5rem;">
-                            Our sanitization engine converts untrusted documents into safe, pixel-based PDFs. 
-                            This process strips away all active content, macros, and embedded exploits by reconstructing 
-                            the document from scratch in an isolated sandbox.
-                        </p>
-                        <div style="background: rgba(74, 222, 128, 0.1); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--success);">
-                            <strong style="color: var(--success); display: block; margin-bottom: 0.3rem;">How it works:</strong>
-                            <span style="font-size: 0.9rem;">Document → Sandbox → Raw Pixels → Safe PDF</span>
-                        </div>
-                    </div>
-                    
-                    <div style="flex: 1;">
-                        <div class="upload-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
-                            <div class="upload-icon">📄</div>
-                            <h3 style="margin-bottom: 0.8rem;">Drop document to sanitize</h3>
-                            <p style="font-size: 0.9rem; color: var(--text-secondary);">Supports PDF, Office, and Images (Max 50MB)</p>
-                            <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(this.files[0])">
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="sanitizationStatus" style="display: none; padding: 1.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid var(--info); margin-bottom: 2rem;">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="font-size: 2rem;">🔄</div>
-                            <div>
-                                <strong id="sanFileName" style="font-size: 1.1rem;">document.pdf</strong>
-                                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.3rem;" id="sanStatusText">Initializing isolation engine...</div>
-                            </div>
-                        </div>
-                        <div class="status-badge status-processing" id="sanStatusBadge">PROCESSING</div>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 2rem;">
-                    <h3 style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid var(--bg-secondary); padding-bottom: 0.5rem;">Recent Sanitized Files</h3>
-                    {% if sanitization_logs %}
-                    <table>
+        <!-- Recent Sanitization Jobs -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-history"></i> Sanitization Logs</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                {% if sanitization_logs %}
+                <div class="data-table-container">
+                    <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Original File Name</th>
+                                <th>Job ID</th>
+                                <th>Original File</th>
                                 <th>Status</th>
-                                <th>Completion Time</th>
-                                <th>Result</th>
+                                <th>Timestamp</th>
+                                {% if current_user.role == 'admin' %}<th></th>{% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for log in sanitization_logs %}
                             {% set details = log.details|fromjson %}
-                            <tr>
-                                <td style="font-weight: 500;">{{ details.file_name }}</td>
-                                <td><span class="status-badge status-{{ log.status }}">{{ log.status }}</span></td>
-                                <td style="color: var(--text-secondary);">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                <td>
-                                    <button class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem; width: auto;">Download Safe PDF</button>
+                            <tr id="audit-{{ log.id }}">
+                                <td class="mono" style="font-size: 0.8rem; font-weight: bold; color: var(--primary);">{{ (log.id|string)[:8] }}...</td>
+                                <td class="mono" style="font-size: 0.8rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ details.original_filename or '—' }}
                                 </td>
+                                <td><span class="badge badge-{{ 'completed' if log.status == 'success' else 'failed' }}">{{ log.status }}</span></td>
+                                <td style="font-size: 0.8rem; color: var(--text-secondary);">{{ log.timestamp.strftime('%m-%d %H:%M') }}</td>
+                                {% if current_user.role == 'admin' %}
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; border-color: transparent;" onclick="archiveAudit('{{ log.id }}')" title="Archive">
+                                        <i class="fa-solid fa-box-archive" style="color: var(--text-secondary);"></i>
+                                    </button>
+                                </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
-                    {% else %}
-                    <p style="padding: 2rem; text-align: center; color: var(--text-secondary); background: rgba(0,0,0,0.1); border-radius: 8px;">No sanitization history found.</p>
-                    {% endif %}
                 </div>
+                {% else %}
+                <div class="empty-state" style="padding: 2.5rem 1rem;">
+                    <div class="empty-state-icon"><i class="fa-solid fa-ghost"></i></div>
+                    <div class="empty-state-title">No sanitized documents</div>
+                    <div class="empty-state-desc">Upload infected/suspicious files above to scrub their embedded payloads.</div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        function switchView(view) {
-            // Update buttons
-            document.querySelectorAll('.switch-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+<style>
+    /* Phase 3: 3D Container Unfold Animation */
+    .container-3d {
+        transform-style: preserve-3d;
+        transform: rotateY(-90deg) scale(0.5);
+        opacity: 0;
+    }
+    .container-3d.unfolded {
+        transform: rotateY(0deg) scale(1);
+        opacity: 1;
+    }
 
-            // Update sections
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            if (view === 'browser') {
-                document.getElementById('browserView').classList.add('active');
+    @media (max-width: 900px) {
+        .rbi-grid-responsive {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // View Switcher (RBI vs Sanitization)
+    function switchSection(target) {
+        const panels = document.querySelectorAll('.isolation-panel');
+        panels.forEach(p => p.style.display = 'none');
+
+        const buttons = document.querySelectorAll('.nav-toggle-btn');
+        buttons.forEach(b => {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-ghost');
+            b.style.color = 'var(--text-secondary)';
+        });
+
+        if (target === 'rbi') {
+            document.getElementById('rbi-section').style.display = 'block';
+            const btn = document.getElementById('toggle-rbi');
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-ghost');
+            btn.style.color = '#ffffff';
+        } else {
+            document.getElementById('sanitization-section').style.display = 'block';
+            const btn = document.getElementById('toggle-sanitization');
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-ghost');
+            btn.style.color = '#ffffff';
+        }
+    }
+
+    // Launch secure Kasm Browser Session handler
+    async function launchBrowser(event) {
+        event.preventDefault();
+
+        let urlInput = document.getElementById('rbiUrl').value.trim();
+        const btn = document.getElementById('launchBtn');
+        const status = document.getElementById('launchStatus');
+        const container = document.getElementById('kasmContainer');
+
+        if (!urlInput) return;
+        
+        // Automatically add https:// if no protocol is specified
+        if (!/^https?:\/\//i.test(urlInput)) {
+            urlInput = 'https://' + urlInput;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Spawning...';
+        status.style.color = 'var(--text-secondary)';
+        status.innerText = 'Initializing remote Kasm browser instance...';
+        container.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/v1/isolation/browser', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: urlInput })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                status.style.color = 'var(--success)';
+                status.innerText = 'Workspace launched!';
+                
+                // Show container
+                const container = document.getElementById('kasmContainer');
+                container.style.display = 'block';
+                
+                // Trigger 3D unfold animation
+                // Needs a tiny delay to allow display:block to render before transitioning transform
+                setTimeout(() => {
+                    container.classList.add('unfolded');
+                }, 50);
+                
+                // Update the big button's link
+                document.getElementById('kasmOpenTab').href = data.cast_url;
+                
+                showToast("RBI environment created successfully", "success");
             } else {
-                document.getElementById('sanitizationView').classList.add('active');
+                status.style.color = 'var(--danger)';
+                const errMsg = data.detail || data.message || 'Kasm launch failed';
+                status.innerText = 'Launch Error';
+                showToast("Failed to launch RBI workspace: " + errMsg, "danger");
             }
+        } catch (err) {
+            status.style.color = 'var(--danger)';
+            status.innerText = 'Connection Error: ' + err.message;
+            showToast("Connection to isolation gateway failed", "danger");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> Launch';
+        }
+    }
+
+    function closeKasmSession() {
+        const container = document.getElementById('kasmContainer');
+        const status = document.getElementById('launchStatus');
+        container.style.display = 'none';
+        status.innerText = 'Session terminated by user.';
+        status.style.color = 'var(--text-secondary)';
+        showToast("RBI Session closed", "info");
+    }
+
+    // Document Sanitization handlers
+    function updateDocInfo(input) {
+        const docInfo = document.getElementById('selectedDocInfo');
+        const docNameSpan = document.getElementById('docNameSpan');
+        const docSizeSpan = document.getElementById('docSizeSpan');
+        const docDropText = document.getElementById('docDropText');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            docNameSpan.innerText = file.name.length > 25 ? file.name.substring(0, 22) + '...' : file.name;
+
+            let sizeStr = '';
+            if (file.size > 1024 * 1024) {
+                sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            } else {
+                sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+            }
+            docSizeSpan.innerText = sizeStr;
+
+            docInfo.style.display = 'block';
+            docDropText.innerText = 'Document selected successfully!';
+        } else {
+            docInfo.style.display = 'none';
+            docDropText.innerText = 'Drag Document or Click to Browse';
+        }
+    }
+
+    // Drag and drop setup for documents
+    const docDragArea = document.getElementById('documentDragArea');
+    if (docDragArea) {
+        docDragArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            docDragArea.style.borderColor = 'var(--accent)';
+            docDragArea.style.backgroundColor = 'rgba(217, 70, 239, 0.08)';
+        });
+
+        docDragArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            docDragArea.style.borderColor = 'rgba(217, 70, 239, 0.3)';
+            docDragArea.style.backgroundColor = 'rgba(217, 70, 239, 0.02)';
+        });
+
+        docDragArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            docDragArea.style.borderColor = 'rgba(217, 70, 239, 0.3)';
+            docDragArea.style.backgroundColor = 'rgba(217, 70, 239, 0.02)';
+
+            const fileInput = document.getElementById('sanitizeFile');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateDocInfo(fileInput);
+            }
+        });
+    }
+
+    async function sanitizeDocument(event) {
+        event.preventDefault();
+
+        const fileInput = document.getElementById('sanitizeFile');
+        const btn = document.getElementById('sanitizeBtn');
+        const btnText = document.getElementById('sanitizeBtnText');
+        const status = document.getElementById('sanitizeStatus');
+        const downloadContainer = document.getElementById('downloadContainer');
+        const downloadLink = document.getElementById('downloadLink');
+
+        if (!fileInput.files.length) {
+            showToast("Please select a document first", "warning");
+            return;
         }
 
-        async function launchBrowser() {
-            const urlInput = document.getElementById('urlInput');
-            const url = urlInput.value;
-            if(!url) return alert('Please enter a target URL');
-            
-            const placeholder = document.getElementById('browserPlaceholder');
-            const iframe = document.getElementById('browserIframe');
-            const container = document.getElementById('browserContainer');
-            
-            placeholder.innerHTML = '<div style="font-size: 3rem; margin-bottom: 1.5rem; animation: spin 2s linear infinite;">⏳</div><h3>Provisioning Environment...</h3><p style="color: var(--text-secondary); margin-top: 0.5rem;">Spinning up a fresh container in the cloud.</p>';
-            
-            // Add spin animation
-            if (!document.getElementById('spinStyle')) {
-                const style = document.createElement('style');
-                style.id = 'spinStyle';
-                style.innerHTML = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-                document.head.appendChild(style);
-            }
-            
-            try {
-                const res = await fetch('/api/v1/isolation/browser', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer {{ api_key }}'
-                    },
-                    body: JSON.stringify({url: url, browser_type: 'chromium', ttl_minutes: 15})
-                });
-                
-                if (!res.ok) throw new Error('API Error: ' + res.status);
-                
-                const data = await res.json();
-                
-                if (data.status === 'active' && data.cast_url) {
-                    placeholder.style.display = 'none';
-                    iframe.src = data.cast_url;
-                    iframe.style.display = 'block';
-                } else if (data.status === 'error') {
-                    placeholder.innerHTML = '<div style="font-size: 3rem; margin-bottom: 1.5rem;">❌</div><h3>Provisioning Failed</h3><p style="color: var(--danger); font-weight: bold;">API Integration Not Fully Configured</p><p style="font-size:0.9rem;color:var(--text-secondary);margin-top:0.8rem;">Switch KASM_MODE to simulated or provide valid API keys.</p>';
-                } else {
-                    const sessionId = data.session_id || 'N/A';
-                    const castUrl = data.cast_url || 'N/A';
-                    placeholder.innerHTML = '<div style="font-size: 3rem; margin-bottom: 1.5rem;">✅</div><h3>Session Ready</h3><p style="color: var(--success); font-weight: bold;">ID: ' + sessionId + '</p><p style="font-size:0.9rem;color:var(--text-secondary);margin-top:0.8rem;">Remote Stream: ' + castUrl + '</p>';
-                }
-            } catch(e) {
-                placeholder.innerHTML = '<div style="font-size: 3rem; margin-bottom: 1.5rem;">❌</div><h3>Launch Failed</h3><p style="color: var(--danger);">' + e.message + '</p>';
-            }
-        }
-        
-        async function handleFileUpload(file) {
-            if(!file) return;
-            
-            const statusArea = document.getElementById('sanitizationStatus');
-            const statusText = document.getElementById('sanStatusText');
-            const statusBadge = document.getElementById('sanStatusBadge');
-            
-            document.getElementById('sanFileName').innerText = file.name;
-            statusText.innerText = 'Converting document to safe pixels (stripping macros)...';
-            statusBadge.innerText = 'PROCESSING';
-            statusBadge.className = 'status-badge status-processing';
-            statusArea.style.display = 'block';
-            
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-                
-                const res = await fetch('/api/v1/isolation/sanitize', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer {{ api_key }}'
-                    },
-                    body: formData
-                });
-                
-                const data = await res.json();
-                
-                if (!res.ok) {
-                    throw new Error(data.detail || 'Upload failed');
-                }
-                
-                statusText.innerText = 'Sanitization complete. Your safe PDF is ready for download.';
-                
-                // Fixed toUpperCase error by checking if data.status exists
-                const finalStatus = data.status ? data.status.toString().toUpperCase() : 'SAFE';
-                statusBadge.innerText = finalStatus;
-                statusBadge.className = 'status-badge status-safe';
-            } catch(e) {
-                statusText.innerText = 'Error: ' + e.message;
-                statusBadge.innerText = 'ERROR';
-                statusBadge.className = 'status-badge status-error';
-            }
-        }
-        
-        // Drag and drop handlers
-        const dropArea = document.getElementById('dropArea');
-        if (dropArea) {
-            dropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropArea.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
-                dropArea.style.borderColor = 'var(--accent)';
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        btn.disabled = true;
+        btnText.innerText = 'Scrubbing...';
+        status.style.color = 'var(--text-secondary)';
+        status.innerText = 'Dangerzone stripping active macros and artifacts...';
+        downloadContainer.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/v1/isolation/sanitize', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
             });
-            dropArea.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                dropArea.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
-                dropArea.style.borderColor = 'var(--info)';
-            });
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropArea.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
-                dropArea.style.borderColor = 'var(--info)';
-                if(e.dataTransfer.files.length) {
-                    handleFileUpload(e.dataTransfer.files[0]);
-                }
-            });
+
+            if (response.ok) {
+                // Return value is a blob download representing the safe PDF
+                const blob = await response.blob();
+                const downloadUrl = URL.createObjectURL(blob);
+
+                status.style.color = 'var(--success)';
+                status.innerText = 'Document sanitized successfully!';
+                downloadContainer.style.display = 'block';
+                downloadLink.href = downloadUrl;
+                downloadLink.download = "safe_" + fileInput.files[0].name.replace(/\.[^/.]+$/, "") + ".pdf";
+                showToast("Dangerzone sanitization complete", "success");
+            } else {
+                status.style.color = 'var(--danger)';
+                status.innerText = 'Sanitization failed';
+                let errMsg = 'Scrubbing engine returned an error';
+                try {
+                    const errData = await response.json();
+                    errMsg = errData.detail || errData.message || errMsg;
+                } catch(e) {}
+                showToast("Sanitization error: " + errMsg, "danger");
+            }
+        } catch (err) {
+            status.style.color = 'var(--danger)';
+            status.innerText = 'Connection Error: ' + err.message;
+            showToast("Connection to sanitization pipeline failed", "danger");
+        } finally {
+            btn.disabled = false;
+            btnText.innerText = 'Sanitize Document';
         }
-    </script>
-</body>
-</html>
+    }
+
+    async function archiveAudit(auditId) {
+        if (!confirm("Are you sure you want to archive this audit log entry?")) return;
+        try {
+            const res = await fetch(`/api/v1/admin/audit/${auditId}/archive`, { method: 'POST' });
+            if (res.ok) {
+                document.getElementById(`audit-${auditId}`).remove();
+                showToast("Record archived successfully", "success");
+            } else {
+                showToast("Failed to archive record", "danger");
+            }
+        } catch (e) {
+            showToast("Network error", "danger");
+        }
+    }
+</script>
+{% endblock %}

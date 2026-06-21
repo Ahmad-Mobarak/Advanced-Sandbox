@@ -1,229 +1,359 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Samples - Sandbox Platform</title>
-    <style>
-        :root {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --bg-card: #0f3460;
-            --text-primary: #eee;
-            --text-secondary: #aaa;
-            --accent: #e94560;
-            --success: #4ade80;
-            --warning: #fbbf24;
-            --danger: #ef4444;
-            --info: #3b82f6;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
-        .navbar { background: var(--bg-secondary); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg-card); }
-        .navbar h1 { font-size: 1.5rem; color: var(--accent); }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; margin-left: 1.5rem; transition: color 0.3s; }
-        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .page-header h2 { font-size: 1.6rem; }
-        .filters { display: flex; gap: 0.75rem; align-items: center; }
-        .filters select, .filters input {
-            background: var(--bg-card); border: 1px solid var(--bg-secondary);
-            color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 8px;
-            font-size: 0.9rem; outline: none;
-        }
-        .filters select:focus, .filters input:focus { border-color: var(--accent); }
-        .btn { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; transition: background 0.3s; font-size: 0.9rem; }
-        .btn:hover { background: #d63850; }
-        .card { background: var(--bg-card); border-radius: 12px; padding: 1.5rem; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--bg-secondary); }
-        th { color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        tr { transition: background 0.2s; }
-        tr:hover { background: var(--bg-secondary); }
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-        .status-pending { background: var(--warning); color: #000; }
-        .status-queued { background: var(--info); color: #fff; }
-        .status-analyzing { background: var(--info); color: #fff; }
-        .status-completed { background: var(--success); color: #000; }
-        .status-failed { background: var(--danger); color: #fff; }
-        .verdict-badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-        .verdict-malicious { background: var(--danger); color: #fff; }
-        .verdict-benign { background: var(--success); color: #000; }
-        .verdict-suspicious { background: var(--warning); color: #000; }
-        .verdict-unknown { background: var(--text-secondary); color: #fff; }
-        .hash { font-family: 'Courier New', monospace; font-size: 0.8rem; color: var(--text-secondary); }
-        .confidence-bar { display: flex; align-items: center; gap: 0.5rem; }
-        .confidence-bar .bar { height: 6px; border-radius: 3px; background: var(--bg-secondary); width: 60px; overflow: hidden; }
-        .confidence-bar .bar .fill { height: 100%; border-radius: 3px; }
-        a.sample-link { color: var(--info); text-decoration: none; }
-        a.sample-link:hover { text-decoration: underline; }
-        .empty-state { text-align: center; padding: 3rem; color: var(--text-secondary); }
-        .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <h1>🛡️ Sandbox Platform</h1>
-        <div class="nav-links">
-            <a href="/">Dashboard</a>
-            <a href="/samples" class="active">Samples</a>
-            <a href="/iocs">IOCs</a>
-            <a href="/mitre-attack">MITRE ATT&CK</a>
-            <a href="/ai-sandbox">AI Sandbox</a>
-            <a href="/isolation">Isolation</a>
-            <a href="/advanced">Advanced</a>
-        </div>
-    </nav>
+{% extends "_base.html" %}
 
-    <div class="container">
-        <div class="page-header">
-            <h2>📦 Sample Analysis</h2>
-            <div class="filters">
-                <form method="GET" action="/samples" style="display:flex;gap:0.5rem;align-items:center;">
-                    <select name="status_filter">
-                        <option value="">All Statuses</option>
-                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="queued" {% if status_filter == 'queued' %}selected{% endif %}>Queued</option>
-                        <option value="analyzing" {% if status_filter == 'analyzing' %}selected{% endif %}>Analyzing</option>
-                        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
-                        <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
-                    </select>
-                    <select name="verdict_filter">
-                        <option value="">All Verdicts</option>
-                        <option value="malicious" {% if verdict_filter == 'malicious' %}selected{% endif %}>Malicious</option>
-                        <option value="suspicious" {% if verdict_filter == 'suspicious' %}selected{% endif %}>Suspicious</option>
-                        <option value="benign" {% if verdict_filter == 'benign' %}selected{% endif %}>Benign</option>
-                    </select>
-                    <button type="submit" class="btn">Filter</button>
+{% block title %}Samples - Sandbox Platform{% endblock %}
+
+{% block breadcrumbs %}
+<span class="breadcrumb-current">Samples</span>
+{% endblock %}
+
+{% block content %}
+<!-- Active Page Helper -->
+{% set active_page = "samples" %}
+
+<div class="page-title-section">
+    <div>
+        <h1 class="page-title">Sample Detonation Center</h1>
+        <p class="page-subtitle">Submit payloads, executables, or docs and track execution telemetry.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; margin-bottom: 2rem;" class="samples-layout-responsive">
+    <!-- Left Column: Upload New Sample -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-cloud-arrow-up"></i> Detonate New Payload</h3>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" onsubmit="submitSample(event)" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    
+                    <!-- Drag and drop zone -->
+                    <div class="drop-zone" id="dragDropArea" onclick="document.getElementById('sampleFile').click()">
+                        <div class="drop-zone-icon">
+                            <i class="fa-solid fa-file-shield"></i>
+                        </div>
+                        <div class="drop-zone-text" id="dropZoneText">Click or Drag File Here</div>
+                        <div class="drop-zone-desc">Supports PDF, PE/ELF, Archives, Office Docs</div>
+                        <input type="file" id="sampleFile" required style="display: none;" onchange="updateFileInfo(this)">
+                    </div>
+
+                    <!-- Selected File Info (Hidden by default) -->
+                    <div id="selectedFileInfo" style="display: none; background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.85rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="font-weight: 600; color: var(--text-primary);" id="fileNameSpan">filename.exe</span>
+                            <span style="color: var(--text-secondary);" id="fileSizeSpan">12 KB</span>
+                        </div>
+                    </div>
+
+                    <!-- Priority level selection -->
+                    <div class="form-group">
+                        <label class="form-label" for="samplePriority">Detonation Priority</label>
+                        <select id="samplePriority" class="form-select">
+                            <option value="1">Priority 1 (Low priority queue)</option>
+                            <option value="5" selected>Priority 5 (Standard priority queue)</option>
+                            <option value="10">Priority 10 (Critical / High priority queue)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" style="width: 100%;">
+                        <i class="fa-solid fa-play"></i>
+                        <span id="uploadBtnText">Submit to Sandbox</span>
+                    </button>
+                    
+                    <div id="uploadProgressContainer" style="display: none; width: 100%;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                            <span>Uploading payload...</span>
+                            <span id="uploadPercent">0%</span>
+                        </div>
+                        <div style="width: 100%; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">
+                            <div id="uploadProgressBar" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.1s;"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Filter & Search List -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Filters Card -->
+        <div class="card">
+            <div class="card-body" style="padding: 1.25rem;">
+                <form method="GET" action="/samples" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; flex: 1;">
+                        <select name="status_filter" class="form-select" style="max-width: 180px;">
+                            <option value="">All Statuses</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="queued" {% if status_filter == 'queued' %}selected{% endif %}>Queued</option>
+                            <option value="analyzing" {% if status_filter == 'analyzing' %}selected{% endif %}>Analyzing</option>
+                            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                        </select>
+                        
+                        <select name="verdict_filter" class="form-select" style="max-width: 180px;">
+                            <option value="">All Verdicts</option>
+                            <option value="malicious" {% if verdict_filter == 'malicious' %}selected{% endif %}>Malicious</option>
+                            <option value="suspicious" {% if verdict_filter == 'suspicious' %}selected{% endif %}>Suspicious</option>
+                            <option value="benign" {% if verdict_filter == 'benign' %}selected{% endif %}>Benign</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fa-solid fa-filter"></i>
+                        <span>Apply Filters</span>
+                    </button>
                 </form>
             </div>
         </div>
 
-        <div class="card" style="margin-bottom: 1.5rem;">
-            <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Upload New Sample</h3>
-            <form id="uploadForm" onsubmit="submitSample(event)" style="display: flex; gap: 1rem; align-items: center;">
-                <input type="file" id="sampleFile" required style="background: var(--bg-primary); padding: 0.5rem; border-radius: 6px; color: var(--text-primary); border: 1px solid var(--bg-secondary);">
-                <select id="samplePriority" style="background: var(--bg-primary); padding: 0.5rem; border-radius: 6px; color: var(--text-primary); border: 1px solid var(--bg-secondary);">
-                    <option value="1">Priority 1 (Lowest)</option>
-                    <option value="5" selected>Priority 5 (Normal)</option>
-                    <option value="10">Priority 10 (Highest)</option>
-                </select>
-                <button type="submit" class="btn" id="uploadBtn">Upload Sample</button>
-                <span id="uploadStatus" style="font-size: 0.9rem; margin-left: 1rem;"></span>
-            </form>
-        </div>
-
+        <!-- Samples List Table -->
         <div class="card">
-            {% if samples %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>File Name</th>
-                        <th>SHA-256</th>
-                        <th>Status</th>
-                        <th>Verdict</th>
-                        <th>Confidence</th>
-                        <th>Submitted</th>
-                        <th>Completed</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sample in samples %}
-                    <tr>
-                        <td>
-                            <a href="/sample/{{ sample.id }}" class="sample-link">
-                                {{ sample.file_name[:35] }}{% if sample.file_name|length > 35 %}...{% endif %}
-                            </a>
-                        </td>
-                        <td class="hash">{{ sample.sha256_hash[:16] }}...</td>
-                        <td><span class="status-badge status-{{ sample.status }}">{{ sample.status }}</span></td>
-                        <td>
-                            {% if sample.verdict %}
-                            <span class="verdict-badge verdict-{{ sample.verdict }}">{{ sample.verdict }}</span>
-                            {% else %}
-                            <span class="verdict-badge verdict-unknown">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if sample.confidence_score %}
-                            <div class="confidence-bar">
-                                <div class="bar">
-                                    <div class="fill" style="width: {{ (sample.confidence_score * 100)|int }}%; background: {% if sample.confidence_score > 0.7 %}var(--danger){% elif sample.confidence_score > 0.4 %}var(--warning){% else %}var(--success){% endif %};"></div>
-                                </div>
-                                <span style="font-size:0.8rem;color:var(--text-secondary);">{{ "%.0f"|format(sample.confidence_score * 100) }}%</span>
-                            </div>
-                            {% else %}
-                            <span style="color:var(--text-secondary);font-size:0.8rem;">—</span>
-                            {% endif %}
-                        </td>
-                        <td style="font-size:0.85rem;">{{ sample.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td style="font-size:0.85rem;">
-                            {% if sample.analysis_completed_at %}
-                                {{ sample.analysis_completed_at.strftime('%Y-%m-%d %H:%M') }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state">
-                <div class="icon">📭</div>
-                <p>No samples found matching your filters.</p>
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Monitored Executions</h3>
             </div>
-            {% endif %}
+            <div class="card-body" style="padding: 0;">
+                {% if samples %}
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>SHA-256</th>
+                                <th>Status</th>
+                                <th>Verdict</th>
+                                <th>Confidence</th>
+                                <th>Submitted</th>
+                                <th>Duration / Completed</th>
+                                {% if current_user.role in ['admin', 'senior_analyst'] %}<th></th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sample in samples %}
+                            <tr>
+                                <td>
+                                    <a href="/sample/{{ sample.id }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                                        {{ sample.file_name[:25] }}{% if sample.file_name|length > 25 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td><span class="mono" style="font-size: 0.8rem; color: var(--text-secondary);">{{ sample.sha256_hash[:16] }}...</span></td>
+                                <td><span class="badge badge-{{ sample.status }}">{{ sample.status }}</span></td>
+                                <td>
+                                    {% if sample.verdict %}
+                                    <span class="badge badge-{{ sample.verdict }}">{{ sample.verdict }}</span>
+                                    {% else %}
+                                    <span class="badge badge-unknown">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if sample.confidence_score is not none %}
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 100px;">
+                                        <div style="width: 50px; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">
+                                            <div style="width: {{ (sample.confidence_score * 100)|int }}%; height: 100%; background: {% if sample.confidence_score > 0.7 %}var(--danger){% elif sample.confidence_score > 0.4 %}var(--warning){% else %}var(--success){% endif %};"></div>
+                                        </div>
+                                        <span class="mono" style="font-size: 0.75rem; color: var(--text-secondary);">{{ "%.0f"|format(sample.confidence_score * 100) }}%</span>
+                                    </div>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size:0.8rem; color: var(--text-secondary);">{{ sample.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td style="font-size:0.8rem; color: var(--text-secondary);">
+                                    {% if sample.analysis_completed_at %}
+                                        {{ sample.analysis_completed_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        <span style="color: var(--text-muted);">In progress</span>
+                                    {% endif %}
+                                </td>
+                                {% if current_user.role in ['admin', 'senior_analyst'] %}
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem; border-color: transparent;" onclick="deleteSample('{{ sample.id }}')" title="Delete Sample">
+                                        <i class="fa-solid fa-trash-can" style="color: var(--danger);"></i>
+                                    </button>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fa-solid fa-box-archive"></i>
+                    </div>
+                    <div class="empty-state-title">No matching samples</div>
+                    <div class="empty-state-desc">No sandbox file submissions matched the active filter critera. Submit a file above to begin.</div>
+                </div>
+                {% endif %}
+            </div>
         </div>
+
     </div>
+</div>
 
-    <script>
-        async function submitSample(event) {
-            event.preventDefault();
+<style>
+    @media (max-width: 950px) {
+        .samples-layout-responsive {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // File info update handler
+    function updateFileInfo(input) {
+        const fileInfo = document.getElementById('selectedFileInfo');
+        const fileNameSpan = document.getElementById('fileNameSpan');
+        const fileSizeSpan = document.getElementById('fileSizeSpan');
+        const dropZoneText = document.getElementById('dropZoneText');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            fileNameSpan.innerText = file.name.length > 25 ? file.name.substring(0, 22) + '...' : file.name;
+            
+            // Format size
+            let sizeStr = '';
+            if (file.size > 1024 * 1024) {
+                sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            } else {
+                sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+            }
+            fileSizeSpan.innerText = sizeStr;
+            
+            fileInfo.style.display = 'block';
+            dropZoneText.innerText = 'File selected successfully!';
+        } else {
+            fileInfo.style.display = 'none';
+            dropZoneText.innerText = 'Click or Drag File Here';
+        }
+    }
+
+    // Drag & Drop visual helpers
+    const dragDropArea = document.getElementById('dragDropArea');
+    if (dragDropArea) {
+        dragDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragDropArea.style.borderColor = 'var(--primary)';
+            dragDropArea.style.backgroundColor = 'rgba(99, 102, 241, 0.08)';
+        });
+
+        dragDropArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dragDropArea.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+            dragDropArea.style.backgroundColor = 'rgba(99, 102, 241, 0.02)';
+        });
+
+        dragDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragDropArea.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+            dragDropArea.style.backgroundColor = 'rgba(99, 102, 241, 0.02)';
+            
             const fileInput = document.getElementById('sampleFile');
-            const priorityInput = document.getElementById('samplePriority');
-            const btn = document.getElementById('uploadBtn');
-            const status = document.getElementById('uploadStatus');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileInfo(fileInput);
+            }
+        });
+    }
 
-            if (!fileInput.files.length) return;
+    // AJAX form upload handler with progress reporting
+    async function submitSample(event) {
+        event.preventDefault();
+        
+        const fileInput = document.getElementById('sampleFile');
+        const priorityInput = document.getElementById('samplePriority');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadBtnText = document.getElementById('uploadBtnText');
+        const progressContainer = document.getElementById('uploadProgressContainer');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const percentText = document.getElementById('uploadPercent');
 
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('priority', priorityInput.value);
+        if (!fileInput.files.length) {
+            showToast("Please choose or drag a file first", "warning");
+            return;
+        }
 
-            btn.disabled = true;
-            btn.innerText = 'Uploading...';
-            status.innerText = '';
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('priority', priorityInput.value);
 
-            try {
-                const response = await fetch('/api/v1/samples', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer {{ api_key }}'
-                    },
-                    body: formData
-                });
+        uploadBtn.disabled = true;
+        uploadBtnText.innerText = 'Preparing...';
+        progressContainer.style.display = 'block';
 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    status.style.color = 'var(--success)';
-                    status.innerText = 'Success! Reloading...';
+        try {
+            // Using XMLHttpRequest to support upload progress tracking
+            const xhr = new XMLHttpRequest();
+            
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    percentText.innerText = percent + '%';
+                    uploadBtnText.innerText = `Uploading (${percent}%)`;
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const resData = JSON.parse(xhr.responseText);
+                    showToast("Payload submitted successfully to analysis pipeline", "success");
+                    uploadBtnText.innerText = 'Redirecting...';
                     setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    status.style.color = 'var(--danger)';
-                    status.innerText = 'Error: ' + (data.detail || data.message || 'Upload failed');
-                    btn.disabled = false;
-                    btn.innerText = 'Upload Sample';
+                    let errMsg = 'File upload failed';
+                    try {
+                        const errData = JSON.parse(xhr.responseText);
+                        errMsg = errData.detail || errData.message || errMsg;
+                    } catch(e) {}
+                    showToast("Submission Error: " + errMsg, "danger");
+                    resetButton();
                 }
-            } catch (err) {
-                status.style.color = 'var(--danger)';
-                status.innerText = 'Error: ' + err.message;
-                btn.disabled = false;
-                btn.innerText = 'Upload Sample';
-            }
+            });
+
+            xhr.addEventListener('error', () => {
+                showToast("Connection error occurred during file submission", "danger");
+                resetButton();
+            });
+
+            xhr.open('POST', '/api/v1/samples');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.send(formData);
+
+        } catch (err) {
+            showToast("Failed to initialize submission: " + err.message, "danger");
+            resetButton();
         }
-    </script>
-</body>
-</html>
+
+        function resetButton() {
+            uploadBtn.disabled = false;
+            uploadBtnText.innerText = 'Submit to Sandbox';
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+            percentText.innerText = '0%';
+        }
+    }
+
+    async function deleteSample(sampleId) {
+        if (!confirm("Are you sure you want to permanently delete this sample and all its analysis data? This action cannot be undone.")) return;
+        
+        try {
+            const res = await fetch(`/api/v1/samples/${sampleId}`, { method: 'DELETE' });
+            if (res.ok) {
+                // Remove the row from the table
+                const row = document.querySelector(`button[onclick="deleteSample('${sampleId}')"]`).closest('tr');
+                if (row) row.remove();
+                showToast("Sample deleted successfully", "success");
+            } else {
+                const data = await res.json();
+                showToast("Failed to delete sample: " + (data.detail || "Unknown error"), "danger");
+            }
+        } catch (e) {
+            showToast("Network error occurred while deleting", "danger");
+        }
+    }
+</script>
+{% endblock %}

@@ -1,6 +1,6 @@
 # Advanced Cybersecurity Sandbox Platform
 # Unified Dockerfile — builds the API + Dashboard + Worker from one image
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gcc \
     curl \
+    ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching

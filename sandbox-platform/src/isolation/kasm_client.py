@@ -20,15 +20,63 @@ class RealKasmClient(KasmClient):
         self.api_secret = api_secret
 
     async def create_session(self, request: RBISessionRequest) -> RBISessionResponse:
-        # In a real implementation, this would make a request to the Kasm API
-        # to provision a new session for the given browser and return the cast URL.
-        logger.warning("RealKasmClient not fully implemented without actual Kasm infrastructure.")
-        return RBISessionResponse(
-            session_id=str(uuid.uuid4()),
-            cast_url="about:blank",
-            status="error",
-            expires_at=datetime.now(timezone.utc)
-        )
+        import httpx
+        import os
+        
+        # We use the Chrome image ID from the Kasm database
+        image_id = "54ffa417-dc10-485b-9929-0c047908ac8b" 
+        user_id = os.getenv("KASM_USER_ID")
+        
+        url = f"{self.api_url.rstrip('/')}/api/public/request_kasm"
+        data = {
+            "api_key": self.api_key,
+            "api_key_secret": self.api_secret,
+            "user_id": user_id,
+            "image_id": image_id,
+            "kasm_url": request.url
+        }
+        
+        try:
+            # Add X-Forwarded-For header to match the user's browser IP, 
+            # so Kasm doesn't reject the session_token due to an IP mismatch.
+            headers = {
+                "X-Forwarded-For": "127.0.0.1",
+                "X-Real-IP": "127.0.0.1"
+            }
+            async with httpx.AsyncClient(verify=False) as client:
+                resp = await client.post(url, json=data, headers=headers)
+            
+            if resp.status_code == 200 and "kasm_url" in resp.json():
+                result = resp.json()
+                
+                # The kasm_url returned is relative (e.g., /#/connect/kasm/...). 
+                # We need to prepend the public URL (127.0.0.1:8443) so the user's browser can reach it.
+                # NOTE: The user MUST access the dashboard via http://127.0.0.1:8000 to prevent third-party cookie drops.
+                public_base_url = self.api_url.replace("host.docker.internal", "127.0.0.1")
+                full_cast_url = f"{public_base_url.rstrip('/')}{result.get('kasm_url')}"
+                
+                return RBISessionResponse(
+                    session_id=result.get("kasm_id", str(uuid.uuid4())),
+                    cast_url=full_cast_url,
+                    status="active",
+                    expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
+                )
+            else:
+                logger.error(f"Kasm API error: {resp.status_code} {resp.text}")
+                return RBISessionResponse(
+                    session_id=str(uuid.uuid4()),
+                    cast_url="about:blank",
+                    status="error",
+                    expires_at=datetime.now(timezone.utc)
+                )
+        except Exception as e:
+            logger.error(f"Failed to call Kasm API: {e}")
+            return RBISessionResponse(
+                session_id=str(uuid.uuid4()),
+                cast_url="about:blank",
+                status="error",
+                expires_at=datetime.now(timezone.utc)
+            )
 
 class SimulatedKasmClient(KasmClient):
     """Simulated Kasm Client for local development and UI testing."""

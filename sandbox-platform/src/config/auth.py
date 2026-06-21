@@ -9,8 +9,12 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 import os
 
-# Configuration for local JWT (should be moved to .env in production)
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-me-in-production")
+# Configuration for local JWT
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    if os.getenv("PLATFORM_MODE", "live").lower() == "live":
+        raise ValueError("JWT_SECRET_KEY environment variable is required in live mode.")
+    SECRET_KEY = "dev-secret-key-change-me-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -52,18 +56,16 @@ class LocalIdentityProvider(IdentityProvider):
 
     async def authenticate(self, credentials: Dict[str, Any]) -> Optional[User]:
         username = credentials.get("username")
-        api_key = credentials.get("api_key")
+        password = credentials.get("password")
         
-        # In a real local provider, we'd check password hashes.
-        # For our dashboard, it uses api_key_hash.
         async with self.db.acquire() as conn:
             row = await conn.fetchrow(
                 """
                 SELECT id, username, role 
                 FROM users 
-                WHERE username = $1 AND api_key_hash = crypt($2, api_key_hash) AND active = TRUE
+                WHERE username = $1 AND password_hash = crypt($2, password_hash) AND active = TRUE
                 """,
-                username, api_key
+                username, password
             )
             
             if row:

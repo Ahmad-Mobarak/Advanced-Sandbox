@@ -14,10 +14,13 @@ from uuid import UUID
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends, Header, Query, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 import asyncpg
 from dotenv import load_dotenv
+from jose import jwt, JWTError
+
+from src.config.auth import SECRET_KEY, ALGORITHM
 
 # AI Sandbox imports
 from src.ai_sandbox.schemas import SandboxExecutionRequest, SandboxExecutionResult
@@ -81,7 +84,7 @@ ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")  # 32-byte key for AES-256
 STORAGE_PATH.mkdir(parents=True, exist_ok=True)
 
 # Security
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # FastAPI app
 app = FastAPI(
@@ -129,31 +132,49 @@ async def get_db_connection():
 # ============================================================================
 
 async def verify_api_key(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> dict:
-    """Verify API key from Authorization header."""
+    """Verify authentication via JWT cookie or API key header."""
     pool = await get_db_pool()
+    
+    # Check for JWT cookie first
+    token = request.cookies.get("access_token")
+    if token:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            username: str = payload.get("sub")
+            if username is None:
+                raise HTTPException(status_code=401, detail="Invalid token")
+            
+            async with pool.acquire() as conn:
+                user = await conn.fetchrow(
+                    "SELECT id, username, role, permissions FROM users WHERE username = $1 AND active = TRUE",
+                    username
+                )
+                if user:
+                    return dict(user)
+        except JWTError:
+            pass # Fall back to API key
+            
+    # Fallback to API Key
+    if not credentials:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated. Provide API key or valid session cookie."
+        )
+        
     api_key = credentials.credentials
 
     async with pool.acquire() as conn:
-        # Check if it's the master admin key from .env
         master_key = os.getenv("API_KEY_ADMIN", "sk_live_admin_replace_me")
-        logger.info(f"AUTH DEBUG: Received token: '{api_key[:5]}...', Expected: '{master_key[:5]}...'")
         
         if api_key == master_key:
-            logger.info("AUTH DEBUG: Master key matched successfully!")
-            
-            # Fetch the actual admin user to prevent foreign key constraint violations
             admin_user = await conn.fetchrow("SELECT id, username, role, permissions FROM users WHERE username = 'admin' LIMIT 1")
-            
             if admin_user:
                 return dict(admin_user)
-                
             return {
-                "id": None,
-                "username": "admin",
-                "role": "admin",
-                "permissions": ["all"]
+                "id": None, "username": "admin", "role": "admin", "permissions": ["all"]
             }
 
         user = await conn.fetchrow(
@@ -491,7 +512,13 @@ async def get_analysis_report(
         )
 
         # Get MITRE ATT&CK mapping from report
-        mitre_attack = row["report_data"].get("mitre_attack", []) if row["report_data"] else []
+        report_data = row["report_data"]
+        if isinstance(report_data, str):
+            try:
+                report_data = json.loads(report_data)
+            except json.JSONDecodeError:
+                report_data = {}
+        mitre_attack = report_data.get("mitre_attack", []) if report_data else []
 
         # Get Sigma matches
         sigma_matches = await conn.fetch(
@@ -621,10 +648,13 @@ async def delete_sample(
         # Delete sample (cascade will handle related records)
         await conn.execute("DELETE FROM samples WHERE id = $1", sample_id)
 
-        # Delete physical file
+        # Delete physical file safely
         storage_path = Path(sample["storage_path"])
         if storage_path.exists():
-            storage_path.unlink()
+            try:
+                storage_path.unlink()
+            except Exception as e:
+                logger.error(f"Failed to delete physical file {storage_path} for sample {sample_id}: {e}")
 
         # Log audit event
         await conn.execute(
@@ -634,7 +664,7 @@ async def delete_sample(
                 details, status
             ) VALUES ($1, 'sample_deleted', 'sample', $2, $3, 'success')
             """,
-            user["id"], sample_id, {"file_path": str(storage_path)}
+            user["id"], sample_id, json.dumps({"file_path": str(storage_path)})
         )
 
     logger.info(f"Sample deleted: {sample_id}")
@@ -900,8 +930,9 @@ async def execute_agent_code(
     """
     # Initialize the sandbox manager
     mode = os.getenv("E2B_MODE", "simulated")
-    manager = get_e2b_manager(mode=mode)
-    
+    api_key = os.getenv("E2B_API_KEY")
+    manager = get_e2b_manager(mode=mode, api_key=api_key)
+
     # Generate and log the egress policy that WOULD be applied
     egress_policy = generate_egress_policy(request.network_access, request.allowed_domains)
     # (In a production environment with gVisor/Docker, we'd apply this policy here)
@@ -968,6 +999,12 @@ async def create_browser_session(
             "success" if result.status in ["active", "success"] else "failure"
         )
         
+    if result.status == "error" or result.cast_url == "about:blank":
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to launch Kasm workspace. No resources are available on the agent or connection timed out."
+        )
+        
     return result
 
 @app.post("/isolation/sanitize", response_model=SanitizationResponse)
@@ -1010,6 +1047,39 @@ async def sanitize_document(
     except Exception as e:
         logger.error(f"FATAL ERROR in sanitize_document: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/isolation/download/{task_id}")
+async def download_sanitized_document(task_id: str):
+    """
+    Download a sanitized document by task ID.
+    If DANGERZONE_MODE=live, it fetches the real file from /storage/samples/safe/.
+    In simulated mode, it returns the mock PDF.
+    """
+    mode = os.getenv("DANGERZONE_MODE", "simulated")
+    
+    if mode == "live":
+        file_path = f"/storage/samples/safe/{task_id}.pdf"
+        if os.path.exists(file_path):
+            from fastapi.responses import FileResponse
+            return FileResponse(
+                path=file_path,
+                media_type="application/pdf",
+                filename=f"safe_document_{task_id}.pdf",
+                headers={"Content-Disposition": f'attachment; filename="safe_document_{task_id}.pdf"'}
+            )
+        else:
+            raise HTTPException(status_code=404, detail="Sanitized document not found")
+            
+    # Simulated Mode Fallback
+    import base64
+    b64_pdf = "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA8PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4gPj4gPj4gL0NvbnRlbnRzIDQgMCBSID4+CmVuZG9iago0IDAgb2JqCjw8IC9MZW5ndGggNTMgPj4Kc3RyZWFtCkJUCi9GMSAyNCBUZgoxMDAgNzAwIFRkCihNb2NrIFNhZmUgRG9jdW1lbnQhKSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDI4OSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDUgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjM5MwolJUVPRgo="
+    content = base64.b64decode(b64_pdf)
+    
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="safe_document_{task_id}.pdf"'}
+    )
 
 # ============================================================================
 # PHASE 5: ADVANCED FEATURES ENDPOINTS

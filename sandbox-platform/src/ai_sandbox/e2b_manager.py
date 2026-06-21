@@ -61,8 +61,8 @@ class RealE2BManager(E2BManager):
             sandbox.close()
 
             # In v2, execution.logs contains the output
-            stdout = "".join(log.line for log in execution.logs.stdout)
-            stderr = "".join(log.line for log in execution.logs.stderr)
+            stdout = "\n".join(str(log) for log in execution.logs.stdout)
+            stderr = "\n".join(str(log) for log in execution.logs.stderr)
             
             # Check for execution error
             error_msg = None

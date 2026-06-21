@@ -1,0 +1,139 @@
+{% extends "_base.html" %}
+
+{% block title %}ML Feedback - Sandbox Platform{% endblock %}
+
+{% block breadcrumbs %}
+<span class="breadcrumb-current">ML Feedback</span>
+{% endblock %}
+
+{% block content %}
+<!-- Active Page Helper -->
+{% set active_page = "ml-feedback" %}
+
+<div class="page-title-section">
+    <div>
+        <h1 class="page-title">ML Validation & Feedback</h1>
+        <p class="page-subtitle">Submit and review ground truth labels to refine our machine learning heuristic models.</p>
+    </div>
+</div>
+
+{% if feedbacks %}
+<!-- Jinja Statistics Calculations -->
+{% set mismatches = [0] %}
+{% set pending_train = [0] %}
+{% for fb in feedbacks %}
+    {% if fb.predicted_verdict != fb.actual_verdict %}
+        {% if mismatches.append(mismatches.pop() + 1) %}{% endif %}
+    {% endif %}
+    {% if not fb.incorporated %}
+        {% if pending_train.append(pending_train.pop() + 1) %}{% endif %}
+    {% endif %}
+{% endfor %}
+
+<!-- Summary Stat Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="stat-card completed">
+        <div class="stat-info">
+            <span class="stat-label">Reviewed Samples</span>
+            <span class="stat-value">{{ feedbacks|length }}</span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: var(--success-bg); color: var(--success);">
+            <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+    </div>
+    <div class="stat-card malicious">
+        <div class="stat-info">
+            <span class="stat-label">Model Mismatches</span>
+            <span class="stat-value" style="color: {% if mismatches[0] > 0 %}var(--danger){% else %}var(--success){% endif %};">{{ mismatches[0] }}</span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: var(--danger-bg); color: var(--danger);">
+            <i class="fa-solid fa-code-compare"></i>
+        </div>
+    </div>
+    <div class="stat-card pending">
+        <div class="stat-info">
+            <span class="stat-label">Pending Retrain</span>
+            <span class="stat-value">{{ pending_train[0] }}</span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: var(--warning-bg); color: var(--warning);">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Feedbacks Table Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-brain" style="color: var(--primary);"></i> ML Model Validation Feedbacks</h3>
+        {% if current_user.role == 'admin' %}
+        <a href="/admin" class="btn btn-secondary btn-sm"><i class="fa-solid fa-gear"></i> Go Retrain Model</a>
+        {% endif %}
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Sample ID</th>
+                        <th>Predicted Verdict</th>
+                        <th>Confidence</th>
+                        <th>Actual Verdict (Ground Truth)</th>
+                        <th>Notes / Context</th>
+                        <th>Incorporation Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fb in feedbacks %}
+                    {% set is_mismatch = (fb.predicted_verdict != fb.actual_verdict) %}
+                    <tr style="{% if is_mismatch %}background-color: rgba(239, 68, 68, 0.02);{% endif %}">
+                        <td>
+                            <a href="/sample/{{ fb.sample_id }}" style="color: var(--primary); text-decoration: none; font-weight: 600;" class="mono">
+                                {{ (fb.sample_id|string)[:8] }}...
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ fb.predicted_verdict }}">
+                                {{ fb.predicted_verdict }}
+                            </span>
+                        </td>
+                        <td class="mono" style="font-weight: 600;">
+                            {{ (fb.predicted_confidence * 100)|round(1) }}%
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ fb.actual_verdict }}" style="font-weight: bold; border: 1px dashed {% if fb.actual_verdict == 'malicious' %}var(--danger){% else %}var(--success){% endif %};">
+                                {{ fb.actual_verdict }}
+                            </span>
+                        </td>
+                        <td style="color: var(--text-secondary); max-width: 300px; font-size: 0.85rem;">
+                            {{ fb.analyst_notes or '—' }}
+                        </td>
+                        <td>
+                            {% if fb.incorporated %}
+                            <span class="badge badge-completed" style="font-size: 0.75rem;">
+                                Trained ({{ fb.incorporated_in_model or 'V1' }})
+                            </span>
+                            {% else %}
+                            <span class="badge badge-pending" style="font-size: 0.75rem;">
+                                Pending Training
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-brain"></i></div>
+            <div class="empty-state-title">No ML Feedback records</div>
+            <div class="empty-state-desc">Analysts haven't submitted any manual corrections or ground truth labels yet. Submit feedback via Sample details screen to trigger logs.</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

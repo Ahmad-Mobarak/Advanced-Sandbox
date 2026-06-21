@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Advanced Sandbox Platform</title>
+    <!-- Modern Typography: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-color-1: #090d16;
+            --bg-color-2: #0f1524;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent: #d946ef;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --error-bg: rgba(239, 68, 68, 0.1);
+            --error-text: #fca5a5;
+            --glass-bg: rgba(15, 21, 36, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(9, 13, 22, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color-1);
+            color: var(--text-primary);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 3D Global Threat Map Background */
+        #threat-map-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(circle at center, rgba(15,21,36,0) 0%, rgba(5,8,17,0.9) 100%);
+        }
+        
+        /* Cinematic Boot Sequence Overlay */
+        #boot-sequence {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace, Consolas, Courier New;
+        }
+        
+        .boot-log {
+            font-size: 0.9rem;
+            max-width: 600px;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: logEntry 0.3s forwards;
+            text-shadow: 0 0 5px var(--success);
+        }
+        
+        @keyframes logEntry {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 2rem;
+            z-index: 10;
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-icon {
+            font-size: 2.75rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));
+            display: inline-block;
+        }
+
+        .title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #ffffff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            color: #4b5563;
+            transition: color 0.3s;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input::placeholder {
+            color: #4b5563;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            background: rgba(9, 13, 22, 0.9);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .form-input:focus + .input-icon {
+            color: var(--primary);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 1rem;
+            color: #4b5563;
+            cursor: pointer;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .toggle-password:hover {
+            color: var(--text-primary);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: var(--error-bg);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--error-text);
+            padding: 0.875rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .footer-text {
+            margin-top: 2.25rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 1.25rem;
+        }
+
+        .highlight {
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .remember-forgot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.75rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .remember-me input {
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Canvas Particle Background -->
+    <!-- 3D Background -->
+    <div id="threat-map-canvas"></div>
+    
+    <!-- Cinematic Boot Sequence -->
+    <div id="boot-sequence">
+        <i class="fa-solid fa-shield-halved" style="font-size: 4rem; color: var(--success); margin-bottom: 2rem; text-shadow: 0 0 20px var(--success);"></i>
+        <div id="bootLogs" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; max-width: 600px; padding: 0 2rem;"></div>
+        <div id="bootProgressBar" style="width: 100%; max-width: 400px; height: 2px; background: rgba(255,255,255,0.1); margin-top: 3rem; overflow: hidden; display: none;">
+            <div id="bootProgressFill" style="height: 100%; width: 0%; background: var(--success); box-shadow: 0 0 10px var(--success); transition: width 0.1s linear;"></div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="login-container" id="loginContainer">
+        <div class="glass-card">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h1 class="title">Sandbox Platform</h1>
+                <p class="subtitle">Secure Analyst Authentication</p>
+            </div>
+            
+            {% if error %}
+            <div class="error-message">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form action="/login" method="POST" id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <div class="input-wrapper">
+                        <input class="form-input" type="text" name="username" placeholder="admin" required autocomplete="username">
+                        <i class="fa-solid fa-user input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <input class="form-input" type="password" name="password" id="passwordInput" placeholder="••••••••" required autocomplete="current-password">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <button type="button" class="toggle-password" id="togglePasswordBtn" aria-label="Toggle Password Visibility">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="remember-forgot">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <span style="color: var(--text-secondary);">MFA Protected</span>
+                </div>
+
+                <button class="btn-submit" type="submit" id="submitBtn">
+                    <span class="spinner" id="btnSpinner"></span>
+                    <span id="btnText">Authorize Access</span>
+                </button>
+            </form>
+            
+            <div class="footer-text">
+                Default Accounts: <span class="highlight">admin</span> / <span class="highlight">user</span><br>
+                Password: <span class="highlight">123123123123</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password Visibility Toggle
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const passwordInput = document.getElementById('passwordInput');
+
+        if (togglePasswordBtn && passwordInput) {
+            togglePasswordBtn.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                const icon = togglePasswordBtn.querySelector('i');
+                if (type === 'text') {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        }
+
+        // Cinematic Boot Sequence
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+
+        if (loginForm && submitBtn) {
+            loginForm.addEventListener('submit', (e) => {
+                // We'll let the form actually submit, BUT we'll intercept it visually.
+                // Wait, if it submits, the page unloads. We need to prevent default,
+                // run the cinematic, and then manually submit.
+                e.preventDefault();
+                
+                submitBtn.disabled = true;
+                btnSpinner.style.display = 'block';
+                btnText.innerText = 'Authenticating...';
+                
+                // Simulate quick API authentication delay
+                setTimeout(() => {
+                    document.getElementById('loginContainer').style.display = 'none';
+                    const boot = document.getElementById('boot-sequence');
+                    boot.style.display = 'flex';
+                    
+                    const logs = document.getElementById('bootLogs');
+                    const pb = document.getElementById('bootProgressBar');
+                    const pbFill = document.getElementById('bootProgressFill');
+                    
+                    const steps = [
+                        "[OK] User authenticated. Establishing secure channel...",
+                        "[OK] Threat Intelligence Engine Loading...",
+                        "[OK] Sandbox Infrastructure Online.",
+                        "[OK] AI Detection Models Loaded.",
+                        "[OK] IOC Correlation Engine Ready.",
+                        "[>>] Mission Control Online. Routing display..."
+                    ];
+                    
+                    let delay = 0;
+                    steps.forEach((text, i) => {
+                        setTimeout(() => {
+                            const div = document.createElement('div');
+                            div.className = 'boot-log mono';
+                            div.innerHTML = text.replace(/\[(.*?)\]/, '<strong style="color:var(--success)">[$1]</strong>');
+                            logs.appendChild(div);
+                            
+                            if (i === steps.length - 1) {
+                                pb.style.display = 'block';
+                                pbFill.style.width = '100%';
+                                pbFill.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
+                                
+                                setTimeout(() => {
+                                    loginForm.submit(); // Actually submit the form
+                                }, 1200);
+                            }
+                        }, delay);
+                        delay += 300 + Math.random() * 400; // random delay between steps
+                    });
+                }, 600);
+            });
+        }
+
+        // ===== 3D Global Threat Map Background =====
+        function initThreatMap() {
+            const container = document.getElementById('threat-map-canvas');
+            if (!container || !window.THREE) return;
+
+            const scene = new THREE.Scene();
+            
+            // Fog for atmospheric depth
+            scene.fog = new THREE.FogExp2(0x050811, 0.002);
+
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 180;
+            camera.position.y = 30;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            const globeGroup = new THREE.Group();
+            scene.add(globeGroup);
+
+            // Wireframe Earth Base
+            const geometry = new THREE.SphereGeometry(60, 48, 48);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x4f46e5,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.08
+            });
+            const globe = new THREE.Mesh(geometry, material);
+            globeGroup.add(globe);
+
+            // Dark inner core
+            const innerMat = new THREE.MeshBasicMaterial({ color: 0x02040a });
+            const innerGlobe = new THREE.Mesh(new THREE.SphereGeometry(59, 32, 32), innerMat);
+            globeGroup.add(innerGlobe);
+
+            // Nodes (cities)
+            const dotGeo = new THREE.BufferGeometry();
+            const dotPos = [];
+            const numDots = 400;
+            for (let i = 0; i < numDots; i++) {
+                const phi = Math.acos(-1 + (2 * i) / numDots);
+                const theta = Math.sqrt(numDots * Math.PI) * phi;
+                dotPos.push(
+                    60 * Math.cos(theta) * Math.sin(phi),
+                    60 * Math.sin(theta) * Math.sin(phi),
+                    60 * Math.cos(phi)
+                );
+            }
+            dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPos, 3));
+            const dotMat = new THREE.PointsMaterial({ color: 0x6366f1, size: 1.5, transparent: true, opacity: 0.5 });
+            const dots = new THREE.Points(dotGeo, dotMat);
+            globeGroup.add(dots);
+
+            // Dynamic Attack Arcs
+            const arcs = [];
+            function createArc() {
+                const startPoint = new THREE.Vector3(
+                    (Math.random() - 0.5) * 120,
+                    (Math.random() - 0.5) * 120,
+                    (Math.random() - 0.5) * 120
+                ).normalize().multiplyScalar(60);
+
+                const endPoint = new THREE.Vector3(
+                    (Math.random() - 0.5) * 120,
+                    (Math.random() - 0.5) * 120,
+                    (Math.random() - 0.5) * 120
+                ).normalize().multiplyScalar(60);
+
+                const midPoint = startPoint.clone().lerp(endPoint, 0.5);
+                midPoint.normalize().multiplyScalar(60 + startPoint.distanceTo(endPoint) * 0.4);
+
+                const curve = new THREE.QuadraticBezierCurve3(startPoint, midPoint, endPoint);
+                const points = curve.getPoints(50);
+                const arcGeo = new THREE.BufferGeometry().setFromPoints(points);
+                
+                // Color based on random threat level
+                const color = Math.random() > 0.7 ? 0xef4444 : (Math.random() > 0.4 ? 0xf59e0b : 0x10b981);
+                
+                const arcMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0 });
+                const arcLine = new THREE.Line(arcGeo, arcMat);
+                
+                arcLine.userData = { 
+                    progress: 0, 
+                    points: points,
+                    speed: 0.005 + Math.random() * 0.015,
+                    color: color
+                };
+                
+                globeGroup.add(arcLine);
+                arcs.push(arcLine);
+                
+                // Traveling payload dot
+                const travelDotGeo = new THREE.SphereGeometry(0.8, 8, 8);
+                const travelDotMat = new THREE.MeshBasicMaterial({ color: color });
+                const travelDot = new THREE.Mesh(travelDotGeo, travelDotMat);
+                globeGroup.add(travelDot);
+                arcLine.userData.dot = travelDot;
+            }
+
+            for(let i=0; i<25; i++) {
+                createArc();
+            }
+
+            // Floating particles in background
+            const bgGeo = new THREE.BufferGeometry();
+            const bgPos = [];
+            for (let i = 0; i < 1000; i++) {
+                bgPos.push(
+                    (Math.random() - 0.5) * 600,
+                    (Math.random() - 0.5) * 600,
+                    (Math.random() - 0.5) * 600 - 100
+                );
+            }
+            bgGeo.setAttribute('position', new THREE.Float32BufferAttribute(bgPos, 3));
+            const bgMat = new THREE.PointsMaterial({ color: 0x4f46e5, size: 1, transparent: true, opacity: 0.2 });
+            const bgParticles = new THREE.Points(bgGeo, bgMat);
+            scene.add(bgParticles);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                globeGroup.rotation.y += 0.001;
+                globeGroup.rotation.x = 0.2 * Math.sin(Date.now() * 0.0005);
+                
+                bgParticles.rotation.y -= 0.0005;
+
+                arcs.forEach(arc => {
+                    arc.userData.progress += arc.userData.speed;
+                    if(arc.userData.progress > 1) {
+                        arc.userData.progress = 0;
+                        // Reset line opacity
+                        arc.material.opacity = 0;
+                    }
+                    
+                    const ptIdx = Math.floor(arc.userData.progress * 50);
+                    if(arc.userData.points[ptIdx]) {
+                        arc.userData.dot.position.copy(arc.userData.points[ptIdx]);
+                    }
+                    
+                    // Arc fade trail
+                    arc.material.opacity = Math.sin(arc.userData.progress * Math.PI) * 0.6;
+                });
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        initThreatMap();
+    </script>
+</body>
+</html>

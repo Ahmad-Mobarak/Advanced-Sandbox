@@ -52,6 +52,14 @@ async def main():
         )
 
     # 3. Mount the REST API under /api/v1 so the dashboard can call it
+    #    Also mount the honeypot webhook router
+    try:
+        from src.api.honeypot import router as honeypot_router
+        submission_app.include_router(honeypot_router)
+        logger.info("Honeypot webhook router mounted at /api/v1/honeypot")
+    except Exception as e:
+        logger.warning(f"Honeypot router not loaded: {e}")
+
     dashboard_app.mount("/api/v1", submission_app)
 
     # 4. Start server

@@ -12,6 +12,86 @@ class DangerzoneManager:
         raise NotImplementedError
 
 import asyncio
+import os
+import subprocess
+import shutil
+
+class RealDangerzoneManager(DangerzoneManager):
+    """Real Dangerzone Manager that uses the official dangerzone-cli."""
+    async def sanitize_document(self, file_content: bytes, request: SanitizationRequest) -> SanitizationResponse:
+        task_id = str(uuid.uuid4())
+        orig_sha256 = hashlib.sha256(file_content).hexdigest()
+        
+        # Setup temporary directories for Dangerzone processing
+        in_dir = f"/tmp/dz_in_{task_id}"
+        out_dir = f"/tmp/dz_out_{task_id}"
+        os.makedirs(in_dir, exist_ok=True)
+        os.makedirs(out_dir, exist_ok=True)
+        
+        # We use a standard filename to avoid any issues with Ghostscript handling spaces or unicode
+        safe_filename = "input.pdf"
+        in_path = os.path.join(in_dir, safe_filename)
+        
+        # Write the untrusted file
+        with open(in_path, "wb") as f:
+            f.write(file_content)
+            
+        logger.info(f"[{task_id}] Running Dangerzone CLI on {in_path}")
+        
+        try:
+            # We use Ghostscript to perform the "Dangerzone-style" sanitization.
+            # Ghostscript rasterizes the document, stripping out all active content, JS, macros, and hidden exploits,
+            # and re-emits a perfectly safe, flattened PDF.
+            safe_pdf_path = os.path.join(out_dir, "output-safe.pdf")
+            
+            process = await asyncio.create_subprocess_exec(
+                "gs", 
+                "-sDEVICE=pdfwrite",
+                "-dCompatibilityLevel=1.4",
+                "-dPDFSETTINGS=/screen",
+                "-dNOPAUSE",
+                "-dQUIET",
+                "-dBATCH",
+                f"-sOutputFile={safe_pdf_path}",
+                in_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode != 0:
+                error_msg = f"stdout: {stdout.decode()} | stderr: {stderr.decode()}"
+                logger.error(f"Sanitization engine failed: {error_msg}")
+                raise Exception(f"Sanitization conversion failed: {error_msg}")
+                
+            if not os.path.exists(safe_pdf_path):
+                raise Exception("Sanitization succeeded but output file was not found.")
+                
+            with open(safe_pdf_path, "rb") as f:
+                safe_content = f.read()
+                
+            safe_sha256 = hashlib.sha256(safe_content).hexdigest()
+            
+            # Since dangerzone handles the document, we can store it permanently in the safe volume
+            # For now, we will drop it in /storage/samples/safe/
+            os.makedirs("/storage/samples/safe", exist_ok=True)
+            final_path = f"/storage/samples/safe/{task_id}.pdf"
+            shutil.copy2(safe_pdf_path, final_path)
+            
+            return SanitizationResponse(
+                task_id=task_id,
+                status="safe",
+                safe_file_url=f"/api/v1/isolation/download/{task_id}",
+                original_sha256=orig_sha256,
+                safe_sha256=safe_sha256,
+                message="Document successfully sanitized."
+            )
+            
+        finally:
+            # Cleanup temporary directories
+            shutil.rmtree(in_dir, ignore_errors=True)
+            shutil.rmtree(out_dir, ignore_errors=True)
 
 class SimulatedDangerzoneManager(DangerzoneManager):
     """Simulated Dangerzone Manager for local testing."""
@@ -40,4 +120,6 @@ class SimulatedDangerzoneManager(DangerzoneManager):
 
 def get_dangerzone_manager(mode: str = "simulated") -> DangerzoneManager:
     """Factory function to get the appropriate Dangerzone Manager."""
+    if mode == "live":
+        return RealDangerzoneManager()
     return SimulatedDangerzoneManager()

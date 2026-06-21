@@ -1,322 +1,563 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sandbox Platform Dashboard</title>
-    <style>
-        :root {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --bg-card: #0f3460;
-            --text-primary: #eee;
-            --text-secondary: #aaa;
-            --accent: #e94560;
-            --success: #4ade80;
-            --warning: #fbbf24;
-            --danger: #ef4444;
-            --info: #3b82f6;
-        }
+{% extends "_base.html" %}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Dashboard - Sandbox Platform{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
+{% block breadcrumbs %}
+<span class="breadcrumb-current">Dashboard</span>
+{% endblock %}
 
-        .navbar {
-            background: var(--bg-secondary);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--bg-card);
-        }
+{% block header_actions %}
+<button class="btn btn-secondary btn-sm" id="refreshBtn" onclick="updateDashboardData()">
+    <i class="fa-solid fa-arrows-rotate"></i>
+    <span>Refresh Stats</span>
+</button>
+{% endblock %}
 
-        .navbar h1 {
-            font-size: 1.5rem;
-            color: var(--accent);
-        }
+{% block content %}
+<!-- Active Page Helper -->
+{% set active_page = "dashboard" %}
 
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            margin-left: 1.5rem;
-            transition: color 0.3s;
-        }
+<div class="page-title-section">
+    <div>
+        <h1 class="page-title">Security Operations Dashboard</h1>
+        <p class="page-subtitle">Real-time status of isolated file detonation and analysis pipeline.</p>
+    </div>
+</div>
 
-        .nav-links a:hover {
-            color: var(--text-primary);
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            transition: transform 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .stat-card.pending .stat-value { color: var(--warning); }
-        .stat-card.analyzing .stat-value { color: var(--info); }
-        .stat-card.completed .stat-value { color: var(--success); }
-        .stat-card.malicious .stat-value { color: var(--danger); }
-        .stat-card.benign .stat-value { color: var(--success); }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--bg-secondary);
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            color: var(--text-primary);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid var(--bg-secondary);
-        }
-
-        th {
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        tr:hover {
-            background: var(--bg-secondary);
-        }
-
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .status-pending { background: var(--warning); color: #000; }
-        .status-analyzing { background: var(--info); color: #fff; }
-        .status-completed { background: var(--success); color: #000; }
-        .status-failed { background: var(--danger); color: #fff; }
-
-        .verdict-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .verdict-malicious { background: var(--danger); color: #fff; }
-        .verdict-benign { background: var(--success); color: #000; }
-        .verdict-suspicious { background: var(--warning); color: #000; }
-        .verdict-unknown { background: var(--text-secondary); color: #fff; }
-
-        .hash {
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .ioc-type {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            background: var(--bg-secondary);
-            border-radius: 4px;
-            font-size: 0.75rem;
-            margin-right: 0.5rem;
-        }
-
-        .refresh-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .refresh-btn:hover {
-            background: #d63850;
-        }
-
-        @media (max-width: 768px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar">
-        <h1>🛡️ Sandbox Platform</h1>
-        <div class="nav-links">
-            <a href="/">Dashboard</a>
-            <a href="/samples">Samples</a>
-            <a href="/iocs">IOCs</a>
-            <a href="/mitre-attack">MITRE ATT&CK</a>
-            <a href="/ai-sandbox">AI Sandbox</a>
-            <a href="/isolation">Isolation</a>
-            <a href="/advanced">Advanced</a>
+<!-- Phase 6: Mission Control Hero Section -->
+<div class="mission-control-hero" style="position: relative; height: 500px; margin-bottom: 2rem; background: #02040a; border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex;">
+    
+    <!-- Centered 3D Threat Globe -->
+    <div id="threatGlobeContainer" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;"></div>
+    
+    <!-- Left HUD Panel: Threat Posture -->
+    <div class="hero-hud-panel" style="position: absolute; left: 1.5rem; top: 1.5rem; bottom: 1.5rem; width: 300px; background: rgba(9, 13, 22, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+        <div>
+            <h3 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem; letter-spacing: 0.1em;">Global Posture</h3>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--danger); text-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">DEFCON 3</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Elevated state of readiness</div>
         </div>
-    </nav>
+        
+        <div style="height: 1px; background: linear-gradient(90deg, var(--border-color-glow), transparent);"></div>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Active Investigations</div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 1.5rem; color: var(--primary);">{{ stats.analyzing_samples or 0 }}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Pending Submissions</div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 1.5rem; color: var(--warning);">{{ stats.pending_samples or 0 }}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase;">Blocked Threats (24H)</div>
+                <div style="font-family: 'JetBrains Mono'; font-size: 1.5rem; color: var(--danger);" id="globeBlockedAttacks">0</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right HUD Panel: Live Telemetry Stream -->
+    <div class="hero-hud-panel" style="position: absolute; right: 1.5rem; top: 1.5rem; bottom: 1.5rem; width: 350px; background: rgba(9, 13, 22, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(217, 70, 239, 0.2); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column;">
+        <h3 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1rem; letter-spacing: 0.1em; display: flex; justify-content: space-between; align-items: center;">
+            Live Telemetry 
+            <span class="badge badge-analyzing" style="font-size: 0.5rem; padding: 0.1rem 0.3rem;"><i class="fa-solid fa-satellite-dish fa-spin"></i></span>
+        </h3>
+        <div id="liveTelemetryStream" style="flex-grow: 1; overflow-y: hidden; position: relative; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
+            <!-- Telemetry items will be injected here via JS -->
+        </div>
+        <!-- Fade out at bottom -->
+        <div style="position: absolute; bottom: 1.5rem; left: 1.5rem; right: 1.5rem; height: 50px; background: linear-gradient(to top, rgba(9, 13, 22, 0.8), transparent); pointer-events: none;"></div>
+    </div>
+</div>
 
-    <div class="container">
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card pending">
-                <div class="stat-value">{{ stats.pending_samples or 0 }}</div>
-                <div class="stat-label">Pending Analysis</div>
+<!-- Main Content Grid -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;" class="main-grid-responsive">
+    <!-- Left Column: Recent Samples & Visualizations -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Recent Samples Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fa-solid fa-box-open"></i> Recent Investigations</h2>
+                <a href="/samples" class="btn btn-ghost btn-sm" style="font-size: 0.85rem;">View All <i class="fa-solid fa-arrow-right" style="margin-left: 0.25rem;"></i></a>
             </div>
-            <div class="stat-card analyzing">
-                <div class="stat-value">{{ stats.analyzing_samples or 0 }}</div>
-                <div class="stat-label">Currently Analyzing</div>
+            <div class="card-body">
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>SHA256</th>
+                                <th>Status</th>
+                                <th>Verdict</th>
+                                <th>Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentSamplesTable">
+                            {% for sample in recent_samples %}
+                            <tr>
+                                <td>
+                                    <a href="/sample/{{ sample.id }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                                        {{ sample.file_name[:30] }}{% if sample.file_name|length > 30 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td><span class="mono" style="font-size: 0.8rem; color: var(--text-secondary);">{{ sample.sha256_hash[:16] }}...</span></td>
+                                <td>
+                                    <span class="badge badge-{{ sample.status }}">
+                                        {{ sample.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if sample.verdict %}
+                                    <span class="badge badge-{{ sample.verdict }}">
+                                        {{ sample.verdict }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-unknown">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td style="color: var(--text-secondary); font-size: 0.85rem;">
+                                    {{ sample.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="stat-card completed">
-                <div class="stat-value">{{ stats.completed_samples or 0 }}</div>
-                <div class="stat-label">Completed</div>
-            </div>
-            <div class="stat-card malicious">
-                <div class="stat-value">{{ stats.malicious_samples or 0 }}</div>
-                <div class="stat-label">Malicious Detected</div>
-            </div>
-            <div class="stat-card benign">
-                <div class="stat-value">{{ stats.benign_samples or 0 }}</div>
-                <div class="stat-label">Benign</div>
+        </div>
+        
+    </div>
+
+    <!-- Right Column: Recent IOCs & Threat Intel feed -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Quick Submission CTA Card -->
+        <div class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(217, 70, 239, 0.05) 100%); border-color: rgba(99, 102, 241, 0.2);">
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                <h3 style="font-weight: 700; font-size: 1.1rem; color: #ffffff;"><i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary); margin-right: 0.5rem;"></i> Detonate New Sample</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Submit an executable, document, or archive for immediate automated sandbox extraction and behavior logging.</p>
+                <a href="/samples" class="btn btn-primary" style="width: 100%;">
+                    <span>Go to File Uploader</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="content-grid">
-            <!-- Recent Samples -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Recent Samples</h2>
-                    <button class="refresh-btn" onclick="location.reload()">Refresh</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>File Name</th>
-                            <th>SHA256</th>
-                            <th>Status</th>
-                            <th>Verdict</th>
-                            <th>Submitted</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sample in recent_samples %}
-                        <tr>
-                            <td><a href="/sample/{{ sample.id }}" style="color: var(--info); text-decoration: none;">{{ sample.file_name[:30] }}{% if sample.file_name|length > 30 %}...{% endif %}</a></td>
-                            <td class="hash">{{ sample.sha256_hash[:16] }}...</td>
-                            <td>
-                                <span class="status-badge status-{{ sample.status }}">
-                                    {{ sample.status }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if sample.verdict %}
-                                <span class="verdict-badge verdict-{{ sample.verdict }}">
-                                    {{ sample.verdict }}
-                                </span>
-                                {% else %}
-                                <span class="verdict-badge verdict-unknown">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ sample.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- Recent IOCs Card & Graph -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fa-solid fa-project-diagram"></i> Live Threat Topology</h2>
             </div>
-
-            <!-- Recent IOCs -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Recent IOCs</h2>
+            <div class="card-body" style="padding: 0; min-height: 280px; position: relative;">
+                <div id="threatTopologyGraph" style="width: 100%; height: 280px; position: absolute; inset: 0;"></div>
+                <div style="position: absolute; bottom: 1rem; right: 1rem; pointer-events: none;">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); background: rgba(9,13,22,0.8); padding: 0.3rem 0.6rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">D3.js Force Graph</div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    {% for ioc in recent_iocs %}
-                    <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                            <span class="ioc-type">{{ ioc.ioc_type }}</span>
-                            <span class="status-badge status-{{ 'malicious' if ioc.confidence == 'high' else 'suspicious' if ioc.confidence == 'medium' else 'pending' }}">
-                                {{ ioc.confidence }}
-                            </span>
-                        </div>
-                        <div class="hash" style="word-break: break-all;">{{ ioc.value }}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                            First seen: {{ ioc.first_seen.strftime('%Y-%m-%d %H:%M') }}
-                        </div>
+            </div>
+            
+            <div class="card-body" style="padding: 1rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1);">
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Recent Indicators:</div>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;" id="recentIOCsList">
+                    {% for ioc in recent_iocs[:3] %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 6px; border-left: 2px solid {% if ioc.confidence == 'high' %}var(--danger){% elif ioc.confidence == 'medium' %}var(--warning){% else %}var(--info){% endif %};">
+                        <span class="mono" style="font-size: 0.75rem; color: var(--text-primary);">{{ ioc.value[:30] }}{% if ioc.value|length > 30 %}...{% endif %}</span>
+                        <span class="badge badge-{% if ioc.confidence == 'high' %}malicious{% elif ioc.confidence == 'medium' %}suspicious{% else %}benign{% endif %}" style="font-size: 0.65rem; padding: 0.1rem 0.3rem;">{{ ioc.ioc_type|upper }}</span>
                     </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
+        
     </div>
+</div>
 
-    <script>
-        // Auto-refresh every 30 seconds
-        setTimeout(() => location.reload(), 30000);
-    </script>
-</body>
-</html>
+<style>
+    .telemetry-item {
+        animation: slideDown 0.3s ease forwards;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+    .telemetry-item strong {
+        color: var(--primary);
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 900px) {
+        .main-grid-responsive {
+            grid-template-columns: 1fr !important;
+        }
+        .hero-hud-panel {
+            position: relative !important;
+            width: auto !important;
+            left: 0 !important; right: 0 !important; top: 0 !important; bottom: 0 !important;
+            background: transparent !important; border: none !important; backdrop-filter: none !important;
+        }
+        .mission-control-hero {
+            height: auto !important;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+        #threatGlobeContainer {
+            position: relative !important;
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+<!-- Globe and D3 Visualization Script -->
+{% block extra_scripts %}
+<script>
+    // ===== 3D THREAT GLOBE (Three.js) =====
+    let globeScene, globeCamera, globeRenderer, globe, arcs = [];
+    
+    function initThreatGlobe() {
+        const container = document.getElementById('threatGlobeContainer');
+        if (!container || !window.THREE) return;
+
+        globeScene = new THREE.Scene();
+        globeCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        globeCamera.position.z = 250;
+
+        globeRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        globeRenderer.setSize(container.clientWidth, container.clientHeight);
+        globeRenderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(globeRenderer.domElement);
+
+        // Globe Group
+        const globeGroup = new THREE.Group();
+        globeScene.add(globeGroup);
+
+        // Wireframe Earth
+        const geometry = new THREE.SphereGeometry(100, 32, 32);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0x6366f1,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        globe = new THREE.Mesh(geometry, material);
+        globeGroup.add(globe);
+
+        // Inner solid core to hide back faces slightly
+        const innerMat = new THREE.MeshBasicMaterial({ color: 0x090d16 });
+        const innerGlobe = new THREE.Mesh(new THREE.SphereGeometry(99, 32, 32), innerMat);
+        globeGroup.add(innerGlobe);
+
+        // Add some random dots (cities/nodes)
+        const dotGeo = new THREE.BufferGeometry();
+        const dotPos = [];
+        const numDots = 200;
+        for (let i = 0; i < numDots; i++) {
+            const phi = Math.acos(-1 + (2 * i) / numDots);
+            const theta = Math.sqrt(numDots * Math.PI) * phi;
+            dotPos.push(
+                100 * Math.cos(theta) * Math.sin(phi),
+                100 * Math.sin(theta) * Math.sin(phi),
+                100 * Math.cos(phi)
+            );
+        }
+        dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPos, 3));
+        const dotMat = new THREE.PointsMaterial({ color: 0x6366f1, size: 2, transparent: true, opacity: 0.6 });
+        const dots = new THREE.Points(dotGeo, dotMat);
+        globeGroup.add(dots);
+
+        // Generate attack arcs
+        function createArc(startLat, startLng, endLat, endLng, color) {
+            // Very simplified coordinate to 3D mapping for demo
+            const phi1 = (90 - startLat) * (Math.PI / 180);
+            const theta1 = (startLng + 180) * (Math.PI / 180);
+            const startPoint = new THREE.Vector3(
+                -(100 * Math.sin(phi1) * Math.cos(theta1)),
+                100 * Math.cos(phi1),
+                100 * Math.sin(phi1) * Math.sin(theta1)
+            );
+
+            const phi2 = (90 - endLat) * (Math.PI / 180);
+            const theta2 = (endLng + 180) * (Math.PI / 180);
+            const endPoint = new THREE.Vector3(
+                -(100 * Math.sin(phi2) * Math.cos(theta2)),
+                100 * Math.cos(phi2),
+                100 * Math.sin(phi2) * Math.sin(theta2)
+            );
+
+            const midPoint = startPoint.clone().lerp(endPoint, 0.5);
+            midPoint.normalize().multiplyScalar(100 + startPoint.distanceTo(endPoint) * 0.3);
+
+            const curve = new THREE.QuadraticBezierCurve3(startPoint, midPoint, endPoint);
+            const points = curve.getPoints(50);
+            const arcGeo = new THREE.BufferGeometry().setFromPoints(points);
+            const arcMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0 });
+            const arcLine = new THREE.Line(arcGeo, arcMat);
+            
+            arcLine.userData = { 
+                progress: 0, 
+                points: points,
+                speed: 0.01 + Math.random() * 0.02
+            };
+            
+            globeGroup.add(arcLine);
+            arcs.push(arcLine);
+            
+            // Add traveling dot
+            const travelDotGeo = new THREE.SphereGeometry(1.5, 8, 8);
+            const travelDotMat = new THREE.MeshBasicMaterial({ color: color });
+            const travelDot = new THREE.Mesh(travelDotGeo, travelDotMat);
+            globeGroup.add(travelDot);
+            arcLine.userData.dot = travelDot;
+        }
+
+        // Add dummy arcs
+        for(let i=0; i<15; i++) {
+            createArc(
+                Math.random() * 180 - 90, Math.random() * 360 - 180,
+                Math.random() * 180 - 90, Math.random() * 360 - 180,
+                Math.random() > 0.3 ? 0xef4444 : 0xf59e0b
+            );
+        }
+
+        // Interaction
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        
+        container.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        container.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaMove = { x: e.offsetX - previousMousePosition.x, y: e.offsetY - previousMousePosition.y };
+                globeGroup.rotation.y += deltaMove.x * 0.005;
+                globeGroup.rotation.x += deltaMove.y * 0.005;
+            }
+            previousMousePosition = { x: e.offsetX, y: e.offsetY };
+        });
+
+        // Animation Loop
+        function animateGlobe() {
+            requestAnimationFrame(animateGlobe);
+            if (!isDragging) {
+                globeGroup.rotation.y += 0.002;
+            }
+            
+            // Animate arcs
+            arcs.forEach(arc => {
+                arc.userData.progress += arc.userData.speed;
+                if(arc.userData.progress > 1) arc.userData.progress = 0;
+                
+                const ptIdx = Math.floor(arc.userData.progress * 50);
+                if(arc.userData.points[ptIdx]) {
+                    arc.userData.dot.position.copy(arc.userData.points[ptIdx]);
+                }
+                
+                // Fade arc trail
+                arc.material.opacity = Math.sin(arc.userData.progress * Math.PI) * 0.8;
+            });
+            
+            globeRenderer.render(globeScene, globeCamera);
+        }
+        animateGlobe();
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            if (!container) return;
+            globeCamera.aspect = container.clientWidth / container.clientHeight;
+            globeCamera.updateProjectionMatrix();
+            globeRenderer.setSize(container.clientWidth, container.clientHeight);
+        });
+        // Initialize Globe on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initThreatGlobe();
+            initThreatTopology();
+        });
+    }
+
+    // ===== D3.js FORCE DIRECTED THREAT TOPOLOGY =====
+    function initThreatTopology() {
+        const container = document.getElementById('threatTopologyGraph');
+        if(!container || !window.d3) return;
+        
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        container.innerHTML = ''; // Clear
+        
+        const svg = d3.select("#threatTopologyGraph").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height])
+            .attr("style", "max-width: 100%; height: auto;");
+            
+        // Generate mock data for visualization
+        const numNodes = 25;
+        const nodes = Array.from({length: numNodes}, (_, i) => ({
+            id: i,
+            group: Math.floor(Math.random() * 4),
+            radius: i === 0 ? 12 : Math.random() * 5 + 4
+        }));
+        
+        const links = [];
+        for(let i = 1; i < numNodes; i++) {
+            links.push({
+                source: i,
+                target: i % 3 === 0 ? 0 : Math.floor(Math.random() * i),
+                value: Math.random()
+            });
+        }
+        
+        const colors = ['#6366f1', '#ef4444', '#f59e0b', '#10b981'];
+        
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(30))
+            .force("charge", d3.forceManyBody().strength(-50))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius(d => d.radius + 2));
+            
+        const link = svg.append("g")
+            .attr("stroke", "rgba(99,102,241,0.2)")
+            .attr("stroke-opacity", 0.6)
+            .selectAll("line")
+            .data(links)
+            .join("line")
+            .attr("stroke-width", d => Math.sqrt(d.value) * 2);
+            
+        const node = svg.append("g")
+            .attr("stroke", "rgba(255,255,255,0.1)")
+            .attr("stroke-width", 1)
+            .selectAll("circle")
+            .data(nodes)
+            .join("circle")
+            .attr("r", d => d.radius)
+            .attr("fill", d => colors[d.group])
+            .call(drag(simulation));
+            
+        // Pulsing animation for central node
+        node.filter(d => d.id === 0)
+            .attr("stroke", "#d946ef")
+            .attr("stroke-width", 2)
+            .style("filter", "drop-shadow(0 0 8px rgba(217,70,239,0.5))");
+            
+        node.append("title")
+            .text(d => `Node ${d.id}`);
+            
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+            node
+                .attr("cx", d => d.x = Math.max(d.radius, Math.min(width - d.radius, d.x)))
+                .attr("cy", d => d.y = Math.max(d.radius, Math.min(height - d.radius, d.y)));
+        });
+        
+        function drag(simulation) {
+            function dragstarted(event) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+            }
+            function dragged(event) {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
+            function dragended(event) {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+            }
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        }
+        
+        window.addEventListener('resize', () => {
+            const newW = container.clientWidth;
+            const newH = container.clientHeight;
+            svg.attr("width", newW).attr("height", newH).attr("viewBox", [0, 0, newW, newH]);
+            simulation.force("center", d3.forceCenter(newW / 2, newH / 2)).alpha(0.3).restart();
+        });
+    }
+</script>
+<script>
+    // Counter animation utility
+    function animateValue(obj, start, end, duration) {
+        if(!obj) return;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            obj.innerHTML = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // Update statistics & recent activity via AJAX to avoid full refresh
+    async function updateDashboardData(isFirstLoad = false) {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.querySelector('i').classList.add('fa-spin');
+        }
+
+        try {
+            const res = await fetch('/api/stats');
+            const data = await res.json();
+            
+            const stats = data.samples;
+            
+            const malicious = stats.malicious || 0;
+            const benign = stats.benign || 0;
+            const analyzing = stats.analyzing || 0;
+            const pending = stats.pending || 0;
+            const completed = stats.completed || 0;
+            
+            // Animate counters on click
+            const duration = isFirstLoad ? 100 : 500;
+            animateValue(document.getElementById('stat-pending'), parseInt(document.getElementById('stat-pending').innerText) || 0, pending, duration);
+            animateValue(document.getElementById('stat-analyzing'), parseInt(document.getElementById('stat-analyzing').innerText) || 0, analyzing, duration);
+            animateValue(document.getElementById('stat-completed'), parseInt(document.getElementById('stat-completed').innerText) || 0, completed, duration);
+            animateValue(document.getElementById('stat-malicious'), parseInt(document.getElementById('stat-malicious').innerText) || 0, malicious, duration);
+            animateValue(document.getElementById('stat-benign'), parseInt(document.getElementById('stat-benign').innerText) || 0, benign, duration);
+
+            // Update globe stats
+            const activeNodesEl = document.getElementById('globeActiveNodes');
+            const blockedAttacksEl = document.getElementById('globeBlockedAttacks');
+            if(activeNodesEl && blockedAttacksEl) {
+                animateValue(activeNodesEl, parseInt(activeNodesEl.innerText) || 0, Math.floor(Math.random() * 500) + 200, duration);
+                animateValue(blockedAttacksEl, parseInt(blockedAttacksEl.innerText) || 0, malicious * 12, duration);
+            }
+
+            if (!isFirstLoad) {
+                showToast("Dashboard stats updated successfully", "success");
+            }
+        } catch (err) {
+            console.error("Dashboard refresh error: ", err);
+            showToast("Failed to fetch fresh sandbox stats", "danger");
+        } finally {
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.querySelector('i').classList.remove('fa-spin');
+            }
+        }
+    }
+
+    // Auto update every 30 seconds
+    setInterval(() => {
+        updateDashboardData();
+    }, 30000);
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateDashboardData(true);
+        initThreatGlobe();
+        initLiveTelemetry();
+        if(typeof initThreatTopology === 'function') initThreatTopology();
+    });
+</script>
+{% endblock %}
