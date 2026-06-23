@@ -134,6 +134,10 @@ We welcome contributions from the security research community!
 4. Run the test suite (`pytest tests/`)
 5. Open a Pull Request
 
+## 👥 Credits / Authors
+
+- **Ahmad Mobarak** ([@Ahmad-Mobarak](https://github.com/Ahmad-Mobarak)) - Lead Developer & Project Architect
+
 ## 📄 License
 
-This project is licensed under the **AGPL-3.0 License**. See the [LICENSE](sandbox-platform/LICENSE) file for complete details.
+This project is licensed under the **AGPL-3.0 License**. See the [LICENSE](LICENSE) file for complete details.
