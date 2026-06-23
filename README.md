@@ -63,7 +63,7 @@ The platform orchestrates a multi-layered analysis pipeline. Data flows seamless
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/new11student-ux/Sand-Box.git
+   git clone git@github.com:Ahmad-Mobarak/Advanced-Sandbox.git
    cd sandbox-platform
    ```
 
