@@ -1,242 +1,144 @@
-# Advanced Cybersecurity Sandbox Platform
+# 🛡️ Advanced Cybersecurity Sandbox Platform
 
-A comprehensive, multi-layered sandbox environment for malware analysis, AI agent containment, and threat intelligence operations. This platform transitions from an academic prototype to a production-ready system with integrated isolation, machine learning, and deception capabilities.
+<div align="center">
+  <p>
+    <b>A comprehensive, multi-layered sandbox environment for malware analysis, AI agent containment, and threat intelligence operations.</b>
+  </p>
+  <p>
+    <i>Transitioning from an academic prototype to a robust, production-ready defense system.</i>
+  </p>
 
-## Overview
+  <!-- 
+  RECOMMENDED MULTIMEDIA INTEGRATION:
+  Add an engaging GIF or high-resolution screenshot of your main dashboard here.
+  Ensure it has descriptive alt text for accessibility.
+  Example: <img src="docs/assets/dashboard-demo.gif" alt="Animated demonstration of the sandbox dashboard showing real-time threat analysis" width="800"> 
+  -->
+</div>
 
-This platform integrates best-in-class open-source security tools into a unified orchestration layer, providing:
+---
 
-- **Malware Analysis** - CAPEv2-based detonation with behavioral monitoring
-- **AI Agent Sandboxing** - Ephemeral execution for LLM-generated code via E2B/gVisor
-- **Real-time Monitoring** - eBPF-powered syscall interception via Azazel/Falco
-- **Threat Intelligence** - MISP integration with automated IOC enrichment
-- **Remote Browser Isolation** - Kasm-based containerized browsing
-- **Document Sanitization** - Dangerzone-style pixelation for safe file handling
-- **Advanced Deception** - Cowrie honeypot routing for attacker behavior analysis
+## 📖 Overview
 
-## Architecture
+The **Advanced Cybersecurity Sandbox Platform** integrates best-in-class open-source security tools into a unified, intelligent orchestration layer. It is purpose-built to safely execute, monitor, and analyze sophisticated threats—ranging from traditional malware payloads to untrusted, AI-generated code.
 
+By combining deep system telemetry with advanced deception and machine learning, this platform empowers security analysts with actionable intelligence without compromising the safety of their infrastructure.
+
+## ✨ Key Features
+
+- 🔬 **Behavioral Analysis Engine**: Detonate samples using **CAPEv2** with deep hypervisor introspection powered by **DRAKVUF**.
+- 🤖 **AI Agent Containment**: Ephemeral, highly-restricted execution environments for LLM-generated code utilizing **E2B** and **gVisor**.
+- 📡 **Real-Time Telemetry**: **eBPF**-powered system call interception and **Falco** runtime security alerting for immediate threat detection.
+- 🌐 **Remote Browser Isolation (RBI)**: Containerized, secure browsing sessions via **Kasm** to investigate malicious links safely.
+- 🗄️ **Threat Intelligence Sync**: Native integration with **MISP** for automated Indicator of Compromise (IOC) enrichment and sharing.
+- 🛡️ **Advanced Deception**: Built-in **Cowrie** and **Dionaea** honeypots designed to divert and study attacker behavior.
+- 📄 **Document Sanitization**: **Dangerzone**-style pixelation for the safe handling and viewing of potentially weaponized documents.
+
+## 🏗️ Architecture
+
+The platform orchestrates a multi-layered analysis pipeline. Data flows seamlessly from submission to behavioral analysis, ending with enriched threat intelligence.
+
+> **🎨 Design Tip:** *Replace this text-based flow with a high-quality SVG or PNG diagram. When embedding images, always use the `alt` attribute to describe the visual content for screen readers (e.g., `alt="Architecture diagram showing the flow from submission to MISP output"`).*
+
+```text
+[ Submission Layer (API / Web Dashboard) ]
+                     │
+                     ▼
+[ Pre-Analysis & Enrichment (MISP / YARA) ]
+                     │
+                     ▼
+[ Sandbox Orchestration (CAPEv2 / E2B / Kasm) ]
+                     │
+                     ▼
+[ Behavioral Analysis (eBPF / ML Scoring / Sigma) ]
+                     │
+                     ▼
+[ Output & Feedback (IOCs / SIEM Alerts / Analyst UI) ]
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  SUBMISSION LAYER                       │
-│         Email gateway / API / Dashboard                 │
-└───────────────────┬─────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│              PRE-ANALYSIS ENRICHMENT                    │
-│     MISP TI Lookup → YARA pre-scan → Priority Score     │
-└───────────────────┬─────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│            SANDBOX ORCHESTRATION LAYER                  │
-│  CAPEv2 / E2B / Kasm (profile-selected)                 │
-└───────────────────┬─────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│             BEHAVIORAL ANALYSIS ENGINE                  │
-│   eBPF/ETW telemetry → ML scoring → Sigma rules         │
-└───────────────────┬─────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────────────────────┐
-│              OUTPUT & FEEDBACK LAYER                    │
-│  IOC extraction → MISP push → SIEM alert → Analyst UI   │
-└─────────────────────────────────────────────────────────┘
-```
 
-## Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- **Docker Desktop** (Recommended) or Linux with Docker Engine
-- **Python 3.11+**
-- **16GB RAM minimum** (32GB recommended for full CAPEv2 stack)
+- **Docker & Docker Compose**: (Docker Desktop recommended on Windows/Mac, Docker Engine on Linux)
+- **Python**: 3.11 or higher
+- **Hardware Requirements**: 16GB RAM minimum (32GB+ highly recommended for the full CAPEv2/DRAKVUF stack)
 
-### Deployment (Docker Compose)
+### 🛠️ Installation
 
-1. **Clone the repository**
+1. **Clone the Repository**
    ```bash
    git clone https://github.com/new11student-ux/Sand-Box.git
    cd sandbox-platform
    ```
 
-2. **Configure environment**
+2. **Configure Environment Variables**
    ```bash
+   # Copy the example environment file
    cp .env.example .env
-   # Edit .env with your security keys and configuration
+   
+   # Edit .env with your specific security keys and configuration
+   nano .env
    ```
 
-3. **Launch the platform**
+3. **Launch the Platform**
    ```bash
-   # Start core services (API + Dashboard + PostgreSQL)
+   # Start core services (API, Dashboard, PostgreSQL) in detached mode
    docker-compose -f docker-compose.dev.yml up --build -d
    ```
 
-The platform will be available at:
-- **Dashboard**: [http://localhost:8000](http://localhost:8000)
-- **API Docs**: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
+### 🎯 Usage
 
-## Built-in AI Capabilities
+Once the deployment completes, access the platform via your browser:
+- 🖥️ **Web Dashboard**: [http://localhost:8000](http://localhost:8000)
+- 📚 **API Documentation**: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
 
-The platform features an advanced **AI Agent Sandbox** designed for safely executing and governing untrusted AI-generated code:
+## 📁 Project Structure
 
-- **Isolation**: Code executes in ephemeral gVisor-hardened containers.
-- **Governance**: The `orchestrator.py` enforces egress policies and tool denylists.
-- **Explainability**: ML-based verdicts include SHAP explanations for academic transparency.
-- **Playbooks**: Automated Incident Response (IR) playbook generation based on analysis reports.
-
-## Project Structure
-
-```
+```text
 sandbox-platform/
-├── Dockerfile                    # Unified container image
-├── docker-compose.dev.yml        # Minimal: Postgres + Platform
-├── docker-compose.yml            # Full stack (CAPEv2, MISP, etc.)
-├── .env                          # Your local configuration
-├── requirements.txt              # Python dependencies
-├── src/
-│   ├── main.py                   # Integrated server launcher
-│   ├── api/
-│   │   ├── submission.py         # REST API (submit, status, reports)
-│   │   ├── code_interpreter.py   # AI code execution endpoint
-│   │   └── sanitize_document.py  # Document sanitization endpoint
-│   ├── frontend/
-│   │   ├── dashboard.py          # Dashboard web application
-│   │   └── templates/            # HTML templates (Jinja2)
-│   ├── worker/
-│   │   ├── main.py               # Background analysis worker
-│   │   └── evasion_resistance.py # Anti-sandbox-detection engine
-│   ├── ai/
-│   │   ├── orchestrator.py       # AI agent governance
-│   │   └── playbook_generator.py # Automated IR playbook creation
-│   ├── ml/
-│   │   └── false_positive_classifier.py  # XGBoost + SHAP classifier
-│   ├── network/
-│   │   └── egress_policy.py      # Dynamic network firewall
-│   ├── config/
-│   │   ├── auth.py               # Identity provider abstraction
-│   │   └── demo_mode.py          # Demo feature flags
-│   ├── database/
-│   │   └── schema.sql            # PostgreSQL schema
-│   ├── infrastructure/
-│   │   ├── retention_policy.py   # GDPR data lifecycle management
-│   │   ├── honeypot_router.py    # Traffic routing to honeypots
-│   │   └── k8s/                  # Kubernetes deployment files
-│   └── metrics/
-│       └── research_metrics.py   # Academic metric export
-├── docs/
-│   ├── THREAT_MODEL.md           # STRIDE threat analysis
-│   ├── REPRODUCIBILITY.md        # Academic reproducibility guide
-│   ├── REAL_LIFE_TESTING.md      # Detailed Deployment & Usage Guide
-│   └── adr/                      # Architecture Decision Records
-├── scripts/
-│   ├── verify-isolation.sh       # Network isolation verification
-│   ├── demo_graduation.sh        # One-click demo launcher
-│   └── export_thesis_data.py     # Thesis data bundler
-├── tests/
-│   └── test_research_validity.py # SHAP consistency + evasion tests
-└── vendor/                       # Git submodules (CAPEv2, MISP, etc.)
+├── docker/                 # Container build files and configs
+├── docs/                   # Detailed documentation and ADRs
+├── src/                    # Core application source code
+│   ├── api/                # REST API endpoints
+│   ├── frontend/           # Web dashboard UI
+│   ├── worker/             # Background analysis engines
+│   ├── ai/                 # AI governance and playbook generation
+│   ├── ml/                 # XGBoost + SHAP classifiers
+│   └── network/            # Dynamic network firewall policies
+├── scripts/                # Utility and deployment scripts
+├── tests/                  # Unit and integration tests
+├── Dockerfile              # Unified container image definition
+└── docker-compose.yml      # Full stack orchestration
 ```
 
-## Implementation Status (Phases 0-6 Complete)
+## 📚 Extensive Documentation
 
-### Phase 1: Foundation
-- [x] PostgreSQL schema with encrypted samples & audit logs
-- [x] FastAPI submission API with RBAC
-- [x] Unified Docker deployment strategy
-- [x] CAPEv2 & MISP baseline integration
+For deeper technical dives and academic context, please consult our detailed guides:
 
-### Phase 2: Behavioral Monitoring
-- [x] eBPF-powered syscall interception
-- [x] Falco runtime security alerting
-- [x] XGBoost-based false positive classifier with SHAP
-
-### Phase 3: AI Agent Sandboxing
-- [x] E2B ephemeral sandbox integration
-- [x] gVisor runtime hardening
-- [x] Dynamic network egress filtering
-
-### Phase 4: Isolation & Sanitization
-- [x] Remote Browser Isolation (RBI) via Kasm
-- [x] Dangerzone document sanitization engine
-
-### Phase 5: Advanced Features
-- [x] DRAKVUF hypervisor introspection
-- [x] Cowrie/Dionaea honeypot integration
-- [x] Automated MITRE ATT&CK technique mapping
-
-### Phase 6: Production Hardening
-- [x] Enarx Confidential Computing support
-- [x] Kubernetes Kustomize templates for AWS
-- [x] Full observability stack (Prometheus/Grafana)
-
-## Documentation
-
-For detailed usage, deployment, and academic context:
-- 📑 **[Deployment & Usage Guide](docs/REAL_LIFE_TESTING.md)**
+- 📑 **[Deployment & Real-Life Testing Guide](docs/REAL_LIFE_TESTING.md)**
 - 🛡️ **[Threat Model (STRIDE)](docs/THREAT_MODEL.md)**
-- 🧬 **[Reproducibility Guide](docs/REPRODUCIBILITY.md)**
+- 🧬 **[Academic Reproducibility Guide](docs/REPRODUCIBILITY.md)**
 
-## Security Considerations
+## ⚠️ Security Considerations
 
-⚠️ **WARNING**: This platform detonates real malware. Deploy only in isolated networks.
+> [!WARNING]  
+> **LIVE MALWARE ENVIRONMENT**  
+> This platform is explicitly designed to detonate and interact with real malicious software.
+> - **Never** expose sandbox interfaces directly to the open internet.
+> - Deploy **only** in isolated, strictly segmented network environments.
+> - Utilize dedicated hardware for hypervisor introspection features to prevent VM escapes.
 
-- Use dedicated hardware for hypervisor introspection (DRAKVUF).
-- Ensure network segmentation between management and sandbox planes.
-- Rotate API keys and database credentials frequently.
+## 🤝 Contributing
 
-## License
-
-AGPL-3.0 - See [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-This project integrates many excellent open-source security tools:
-- [CAPEv2](https://github.com/kevoreilly/CAPEv2) | [MISP](https://github.com/MISP/MISP) | [Sigma HQ](https://github.com/SigmaHQ/sigma) | [Falco](https://github.com/falcosecurity/falco) | [E2B](https://github.com/e2b-dev/E2B) | [gVisor](https://github.com/google/gvisor)
-nths 13-15)
-- [x] DRAKVUF hypervisor introspection
-- [x] Cowrie honeypot integration
-- [x] MITRE ATT&CK automated tagging
-
-### Phase 6: Production Hardening (Months 16-18)
-- [x] Enarx confidential computing
-- [x] Kubernetes orchestration
-- [x] Full observability stack
-
-## Security Considerations
-
-⚠️ **WARNING**: This platform is designed to handle malicious software. Deploy only in isolated, controlled environments.
-
-- Never expose sandbox interfaces directly to the internet
-- Use network segmentation to isolate sandbox VMs
-- Enable encryption for sample storage
-- Regularly update all components
-- Monitor for sandbox escape attempts
-
-## Dataset Sources
-
-For training the ML classifier:
-- [EMBER Dataset](https://github.com/elastic/ember)
-- [MalwareBazaar](https://bazaar.abuse.ch/)
-- [VirusShare](https://virusshare.com/)
-- [theZoo](https://github.com/ytisf/theZoo)
-
-## Contributing
+We welcome contributions from the security research community!
 
 1. Fork the repository
-2. Create a feature branch
-3. Run tests: `pytest tests/`
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Run the test suite (`pytest tests/`)
+5. Open a Pull Request
 
-## License
+## 📄 License
 
-AGPL-3.0 - See LICENSE file for details
-
-## Acknowledgments
-
-This project integrates many excellent open-source security tools:
-- [CAPEv2](https://github.com/kevoreilly/CAPEv2)
-- [MISP](https://github.com/MISP/MISP)
-- [Sigma HQ](https://github.com/SigmaHQ/sigma)
-- [Falco](https://github.com/falcosecurity/falco)
-- [E2B](https://github.com/e2b-dev/E2B)
-- [gVisor](https://github.com/google/gvisor)
+This project is licensed under the **AGPL-3.0 License**. See the [LICENSE](LICENSE) file for complete details.
