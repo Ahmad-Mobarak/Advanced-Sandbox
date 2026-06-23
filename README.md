@@ -8,12 +8,7 @@
     <i>Transitioning from an academic prototype to a robust, production-ready defense system.</i>
   </p>
 
-  <!-- 
-  RECOMMENDED MULTIMEDIA INTEGRATION:
-  Add an engaging GIF or high-resolution screenshot of your main dashboard here.
-  Ensure it has descriptive alt text for accessibility.
-  Example: <img src="docs/assets/dashboard-demo.gif" alt="Animated demonstration of the sandbox dashboard showing real-time threat analysis" width="800"> 
-  -->
+  <img src="assets/demo.gif" alt="Animated demonstration of the sandbox dashboard showing real-time threat analysis" width="800">
 </div>
 
 ---
@@ -116,9 +111,9 @@ sandbox-platform/
 
 For deeper technical dives and academic context, please consult our detailed guides:
 
-- 📑 **[Deployment & Real-Life Testing Guide](docs/REAL_LIFE_TESTING.md)**
-- 🛡️ **[Threat Model (STRIDE)](docs/THREAT_MODEL.md)**
-- 🧬 **[Academic Reproducibility Guide](docs/REPRODUCIBILITY.md)**
+- 📑 **[Deployment & Real-Life Testing Guide](sandbox-platform/docs/REAL_LIFE_TESTING.md)**
+- 🛡️ **[Threat Model (STRIDE)](sandbox-platform/docs/THREAT_MODEL.md)**
+- 🧬 **[Academic Reproducibility Guide](sandbox-platform/docs/REPRODUCIBILITY.md)**
 
 ## ⚠️ Security Considerations
 
@@ -141,4 +136,4 @@ We welcome contributions from the security research community!
 
 ## 📄 License
 
-This project is licensed under the **AGPL-3.0 License**. See the [LICENSE](LICENSE) file for complete details.
+This project is licensed under the **AGPL-3.0 License**. See the [LICENSE](sandbox-platform/LICENSE) file for complete details.
