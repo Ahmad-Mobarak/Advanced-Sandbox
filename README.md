@@ -33,23 +33,9 @@ By combining deep system telemetry with advanced deception and machine learning,
 
 The platform orchestrates a multi-layered analysis pipeline. Data flows seamlessly from submission to behavioral analysis, ending with enriched threat intelligence.
 
-> **🎨 Design Tip:** *Replace this text-based flow with a high-quality SVG or PNG diagram. When embedding images, always use the `alt` attribute to describe the visual content for screen readers (e.g., `alt="Architecture diagram showing the flow from submission to MISP output"`).*
-
-```text
-[ Submission Layer (API / Web Dashboard) ]
-                     │
-                     ▼
-[ Pre-Analysis & Enrichment (MISP / YARA) ]
-                     │
-                     ▼
-[ Sandbox Orchestration (CAPEv2 / E2B / Kasm) ]
-                     │
-                     ▼
-[ Behavioral Analysis (eBPF / ML Scoring / Sigma) ]
-                     │
-                     ▼
-[ Output & Feedback (IOCs / SIEM Alerts / Analyst UI) ]
-```
+<div align="center">
+  <img src="assets/architecture.png" alt="Architecture diagram showing the flow from submission, pre-analysis & enrichment, sandbox orchestration, behavioral analysis, to output & feedback" width="800">
+</div>
 
 ## 🚀 Getting Started
 
